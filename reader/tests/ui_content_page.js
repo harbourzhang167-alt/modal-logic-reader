@@ -90,6 +90,13 @@ async function evalJs(send, expression) {
   }
   console.log("ok   standalone chapters:", stats.chapters, "| mini TOCs:", stats.miniTocs);
 
+  const shot = await send("Page.captureScreenshot", { format: "png" });
+  fs.writeFileSync(
+    path.join(__dirname, "..", "screenshot-content.png"),
+    Buffer.from(shot.data, "base64")
+  );
+  console.log("ok   screenshot-content.png");
+
   const firstMini = await evalJs(
     send,
     `(() => {
@@ -116,13 +123,6 @@ async function evalJs(send, expression) {
   const jumpHash = await evalJs(send, "location.hash");
   if (!jumpHash) throw new Error("chapter jump did not update hash");
   console.log("ok   chapter jump:", jumpHash);
-
-  const shot = await send("Page.captureScreenshot", { format: "png" });
-  fs.writeFileSync(
-    path.join(__dirname, "..", "screenshot-content.png"),
-    Buffer.from(shot.data, "base64")
-  );
-  console.log("ok   screenshot-content.png");
 
   console.log("\nstandalone content page tests passed");
   ws.close();
