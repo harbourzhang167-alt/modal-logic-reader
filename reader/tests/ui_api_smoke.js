@@ -115,6 +115,18 @@ async function waitReady(send) {
   await evalJs(
     send,
     `(() => {
+      const option = [...document.querySelectorAll('#chapter-select option')]
+        .find((o) => o.textContent.includes('第二讲'));
+      const select = document.getElementById('chapter-select');
+      select.value = option.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`
+  );
+  await sleep(250);
+
+  await evalJs(
+    send,
+    `(() => {
       const p = [...document.querySelectorAll('#doc p, #doc li')].find((el) =>
         el.textContent.includes('反模型是证明'));
       p.scrollIntoView({ block: 'center', behavior: 'instant' });

@@ -108,6 +108,34 @@ def table_text(table: Table) -> str:
     return "\n".join(lines)
 
 
+TAG_RE = re.compile(r"<[^>]+>")
+
+
+def plain_text(fragment: str) -> str:
+    return html.unescape(TAG_RE.sub("", fragment)).strip()
+
+
+def heading_title(fragment: str) -> str:
+    match = re.search(r'<span class="heading-text">(.*?)</span>', fragment, re.S)
+    return plain_text(match.group(1) if match else fragment)
+
+
+def mini_toc(chapter_html: str) -> str:
+    items = []
+    for match in re.finditer(
+        r'<h([23]) id="([^"]+)" class="[^"]*">(.*?)</h\1>', chapter_html, re.S
+    ):
+        level = int(match.group(1))
+        anchor = match.group(2)
+        title = heading_title(match.group(3))
+        items.append(
+            f'<a class="mini-lvl-{level}" href="#{anchor}">{html.escape(title)}</a>'
+        )
+    if not items:
+        return ""
+    return '<nav class="chapter-mini-toc" aria-label="本章目录">' + "".join(items) + "</nav>"
+
+
 def split_chunks(text: str, max_chars: int = 720, overlap: int = 100) -> list[str]:
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
     if not text:
@@ -317,10 +345,30 @@ def main() -> None:
 
     generated_at = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
     body_html = clean_links("\n".join(html_parts))
+
+    h1_matches = list(
+        re.finditer(r'<h1 id="([^"]+)" class="chapter">(.*?)</h1>', body_html, re.S)
+    )
+    chapters = []
+    for index, match in enumerate(h1_matches):
+        end = h1_matches[index + 1].start() if index + 1 < len(h1_matches) else len(body_html)
+        chapter_html = body_html[match.start():end].strip()
+        chapters.append(
+            {
+                "id": match.group(1),
+                "title": heading_title(match.group(2)),
+                "html": chapter_html,
+            }
+        )
+
+    if not chapters:
+        raise SystemExit("No H1 chapters found in generated HTML")
+
     stats = {
         "generatedAt": generated_at,
         "source": str(DOCX.relative_to(ROOT)).replace("\\", "/"),
         "headings": len(headings),
+        "chapters": len(chapters),
         "chunks": len(chunks),
         "chars": len(body_html),
         "htmlBytes": len(body_html.encode("utf-8")),
@@ -330,13 +378,102 @@ def main() -> None:
         "title": "模态逻辑六讲",
         "subtitle": "从 Kripke 语义到认知、时间与道义应用",
         "generatedAt": generated_at,
-        "html": body_html,
+        "chapters": chapters,
         "stats": stats,
     }
     (OUT / "content.js").write_text(
         "globalThis.READER_DOC = " + json.dumps(content, ensure_ascii=False) + ";\n",
         encoding="utf-8",
     )
+
+    sections = []
+    for chapter in chapters:
+        toc = mini_toc(chapter["html"])
+        chapter_html = chapter["html"]
+        if toc:
+            chapter_html = chapter_html.replace("</h1>", "</h1>\n" + toc, 1)
+        sections.append(
+            f'<section class="standalone-chapter" data-chapter="{chapter["id"]}">'
+            f"{chapter_html}</section>"
+        )
+
+    chapter_options = "".join(
+        f'<option value="{chapter["id"]}">{html.escape(chapter["title"])}</option>'
+        for chapter in chapters
+    )
+    standalone = f"""<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{html.escape(content["title"])} · 正文独立页</title>
+  <link rel="stylesheet" href="content-page.css">
+</head>
+<body>
+  <header class="content-topbar">
+    <div class="content-brand">
+      <span class="content-mark">□</span>
+      <div>
+        <h1>{html.escape(content["title"])}</h1>
+        <p>正文独立页 · 按大标题分章</p>
+      </div>
+    </div>
+    <div class="content-actions">
+      <label class="jump-label">跳章
+        <select id="chapter-jump">{chapter_options}</select>
+      </label>
+      <button type="button" onclick="window.print()">打印</button>
+      <a href="index.html" class="back-link">交互阅读器</a>
+    </div>
+  </header>
+  <main class="standalone-main">
+    {''.join(sections)}
+  </main>
+  <footer class="standalone-footer">
+    <span>生成于 {html.escape(generated_at)}</span>
+    <span>共 {len(chapters)} 章 · 点击章内小标题可跳转到小节</span>
+  </footer>
+  <script>
+    (() => {{
+      const select = document.getElementById("chapter-jump");
+      if (!select) return;
+      const sync = () => {{
+        const headings = [...document.querySelectorAll(".standalone-chapter h1[id]")];
+        let current = headings[0];
+        for (const heading of headings) {{
+          if (heading.getBoundingClientRect().top <= 120) current = heading;
+          else break;
+        }}
+        if (current) select.value = current.id;
+      }};
+      select.addEventListener("change", () => {{
+        location.hash = select.value;
+        const target = document.getElementById(select.value);
+        if (target) target.scrollIntoView({{ behavior: "smooth", block: "start" }});
+      }});
+      window.addEventListener("scroll", sync, {{ passive: true }});
+      if (location.hash) {{
+        const target = document.getElementById(location.hash.slice(1));
+        if (target) target.scrollIntoView({{ behavior: "instant", block: "start" }});
+      }}
+      document.querySelectorAll(".copy-code").forEach((button) => {{
+        button.addEventListener("click", async () => {{
+          const code = button.parentElement.querySelector("pre code");
+          if (!code) return;
+          try {{
+            await navigator.clipboard.writeText(code.innerText);
+            button.textContent = "已复制";
+            setTimeout(() => {{ button.textContent = "复制"; }}, 1200);
+          }} catch (_) {{}}
+        }});
+      }});
+      sync();
+    }})();
+  </script>
+</body>
+</html>
+"""
+    (OUT / "content.html").write_text(standalone, encoding="utf-8")
 
     rag = {"generatedAt": generated_at, "source": SOURCE_LABEL, "chunks": chunks}
     (OUT / "rag.js").write_text(
@@ -360,6 +497,7 @@ def main() -> None:
 - 生成时间：{generated_at}
 - 块数：{len(chunks)}
 - 标题数：{len(headings)}
+- 章节数：{len(chapters)}
 - 字段：`id`、`source`、`section`、`anchor`、`level`、`text`、`chars`
 
 `modal-logic-rag.jsonl` 每行一个 JSON 块；`rag.js` 是浏览器加载的同一份数据。
@@ -375,6 +513,7 @@ python reader/build_reader.py
     )
 
     print(f"wrote {OUT / 'content.js'}")
+    print(f"wrote {OUT / 'content.html'}")
     print(f"wrote {OUT / 'rag.js'}")
     print(f"wrote {RAG_DIR / 'modal-logic-rag.jsonl'}")
     print(json.dumps(stats, ensure_ascii=False, indent=2))

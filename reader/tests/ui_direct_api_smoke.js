@@ -102,6 +102,18 @@ async function waitReady(send) {
   if (badge !== "内置 API") throw new Error("mode badge is not 内置 API: " + badge);
   console.log("ok   mode badge:", badge);
 
+  await evalJs(
+    send,
+    `(() => {
+      const option = [...document.querySelectorAll('#chapter-select option')]
+        .find((o) => o.textContent.includes('第二讲'));
+      const select = document.getElementById('chapter-select');
+      select.value = option.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    })()`
+  );
+  await sleep(250);
+
   // settings: test connection
   await evalJs(send, "document.getElementById('settings-btn').click()");
   await sleep(100);

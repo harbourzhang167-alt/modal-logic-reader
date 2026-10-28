@@ -5,7 +5,8 @@ require("../explain.js");
 
 const R = global.ReaderExplain;
 const chunks = global.RAG_DATA.chunks;
-const html = global.READER_DOC.html;
+const chapters = global.READER_DOC.chapters;
+const html = chapters.map((c) => c.html).join("\n");
 const retriever = R.createRetriever(chunks);
 
 function test(name, fn) {
@@ -24,6 +25,12 @@ test("RAG chunks are present and addressable", () => {
   for (const c of chunks.slice(0, 10)) {
     assert.ok(c.id && c.section && c.anchor && c.text);
   }
+});
+
+test("DOC is split into major chapters", () => {
+  assert.ok(Array.isArray(chapters) && chapters.length >= 5);
+  assert.ok(chapters.every((c) => c.id && c.title && c.html));
+  console.log("     chapters:", chapters.length);
 });
 
 test("every chunk anchor exists in the generated HTML", () => {

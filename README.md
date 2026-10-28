@@ -2,8 +2,11 @@
 
 把 6 讲模态逻辑教学 DOCX 变成一个可交互网页：
 
-- 左侧目录（H1–H3，可筛选、滚动高亮）
-- 右侧正文（标题、段落、表格、代码块）
+- **正文按 H1 分章**：一次显示一章，章节选择器切换，小标题仍可跳转
+- **左侧目录**：章/节/小节可勾选显示，宽度可拖拽，滚动高亮
+- **正文全文搜索**：搜索所有章节，结果显示章节/片段，点击跳转并高亮
+- **右侧解释栏**：宽度可拖拽；支持“浮窗/停靠”和“钉住/取消钉住”
+- **正文独立页**：`reader/content.html` 按大标题分节，每章带小目录，可跳章、打印
 - 选中正文中的词/句，点“解释”
 - 默认 **本地 RAG**（离线，BM25 检索 + 抽取式回答）
 - 可选 **内置 API**（网页里填服务商/模型/Key，浏览器直接调用，不需要 Python）
@@ -12,7 +15,7 @@
 ![内置 API 设置](reader/screenshot-settings.png)
 
 > 在线版：<https://harbourzhang167-alt.github.io/modal-logic-reader/>  
-> 页面截图：[reader/screenshot-panel.png](reader/screenshot-panel.png)
+> 页面截图：[reader/screenshot.png](reader/screenshot.png)、[reader/screenshot-panel.png](reader/screenshot-panel.png)、[reader/screenshot-content.png](reader/screenshot-content.png)
 
 ## 直接使用
 
@@ -25,6 +28,15 @@ python reader/serve.py --port 8010
 ```
 
 打开 <http://127.0.0.1:8010/>。
+
+### 正文独立页
+
+点击右上角“正文独立页”，或直接打开 `reader/content.html`：
+
+- 全部 9 章按 H1 分节；
+- 每章开头有本章小目录；
+- 顶部“跳章”下拉、打印按钮、返回阅读器；
+- H2/H3 点击仍可跳到小节。
 
 ### 接 API
 
@@ -82,15 +94,17 @@ python reader/build_reader.py
 ├── LICENSE                        MIT License（代码）
 ├── CONTENT-LICENSE.md             CC BY 4.0（讲义内容）
 ├── reader/
-│   ├── index.html                 阅读器
-│   ├── style.css / app.js         布局、目录、划词、面板
+│   ├── index.html                 阅读器（分章、可拖拽目录/解释栏）
+│   ├── style.css / app.js         布局、分章路由、搜索、浮窗
 │   ├── explain.js                 BM25 检索、抽取式回答、API
-│   ├── content.js                 生成的正文
+│   ├── content.js                 按 H1 分章的正文数据
+│   ├── content.html               正文独立页
+│   ├── content-page.css           正文独立页样式
 │   ├── rag.js                     生成的 RAG 数据
 │   ├── rag/modal-logic-rag.jsonl  标准 RAG 文档
-│   ├── build_reader.py            DOCX → HTML + RAG
+│   ├── build_reader.py            DOCX → 分章 HTML + RAG + 独立页
 │   ├── serve.py                   静态服务 + API 代理
-│   └── tests/                     RAG 与 UI 冒烟测试
+│   └── tests/                     RAG、UI、API、独立页测试
 ├── course/模态逻辑六讲讲义.docx      内容源
 └── modal_lab.py                   讲义中引用的 Python 示例库
 ```
@@ -98,11 +112,14 @@ python reader/build_reader.py
 ## 测试
 
 ```powershell
-# RAG 检索、抽取式回答、anchor 一致性
+# RAG 检索、章节拆分、抽取式回答、anchor 一致性
 node reader/tests/test_rag.js
 
-# 页面、目录、划词、面板、设置（headless Chrome）
+# 分章、目录层级、正文搜索、拖拽、浮窗/钉住、设置（headless Chrome）
 node reader/tests/ui_smoke.js
+
+# 正文独立页：9 章、每章小目录、锚点、跳章
+node reader/tests/ui_content_page.js
 ```
 
 API 模式可以用 mock OpenAI 服务验证，不需要真实 Key。
@@ -156,6 +173,7 @@ node reader/tests/ui_api_smoke.js
 - 内置 API 的质量取决于模型和 Prompt，且受服务商 **CORS** 策略影响；直连失败时改用代理或支持 CORS 的网关。
 - `serve.py` 的代理模式只做转发。
 - 公式以 Unicode 文本呈现，没有接 KaTeX/MathJax。
+- 正文搜索是子串匹配 + RAG 块排序，不是语义搜索。
 - 没有账号、没有云端存储；设置保存在浏览器 localStorage，API Key 在 sessionStorage 或服务端环境变量。
 - DOCX 更新后需要重新运行 `reader/build_reader.py`，并提交生成文件。
 

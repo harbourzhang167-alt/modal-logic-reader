@@ -5,8 +5,11 @@
 
 把 `course/模态逻辑六讲讲义.docx` 转成一个可交互的网页：
 
-- 左侧目录（H1–H3，可筛选、滚动高亮）；
-- 右侧正文（标题、段落、列表、表格、代码块）；
+- **正文按 H1 分章**：一次显示一个大标题章节，章节选择器切换；小标题仍可点击跳转；
+- **左侧目录**：章 / 节 / 小节分级，可勾选显示层级，宽度可拖拽，滚动高亮；
+- **正文全文搜索**：搜索所有章节的正文，结果显示章节/片段，点击跳转并高亮；
+- **右侧解释栏**：宽度可拖拽；可在“停靠 / 浮窗”之间切换；浮窗可拖动、可缩放；“钉住”后点外部不关闭；
+- **正文独立页**：`reader/content.html` 按大标题分节，带每章小目录、跳章下拉和打印样式；
 - 选中正文中的词/句，弹出“解释”按钮；
 - 解释模式三选一：
   - **本地 RAG**：离线，BM25 检索 + 抽取式回答，不需要 API；
@@ -28,6 +31,15 @@ python reader/serve.py --port 8010
 ```
 
 然后打开 <http://127.0.0.1:8010/>。
+
+### 正文独立页
+
+点击右上角“正文独立页”，或直接打开 `reader/content.html`：
+
+- 全部 9 章按 H1 分节；
+- 每章开头有本章小目录；
+- 顶部“跳章”下拉、打印按钮、返回阅读器；
+- H2/H3 仍然可以点击跳到小节。
 
 ### 使用内置 API（不需要 Python）
 
@@ -78,13 +90,15 @@ course/模态逻辑六讲讲义.docx
 
 | 文件 | 作用 |
 |---|---|
-| `reader/content.js` | 页面 HTML 与统计信息（`globalThis.READER_DOC`） |
+| `reader/content.js` | 按 H1 分章的 HTML 与统计信息（`globalThis.READER_DOC.chapters`） |
+| `reader/content.html` | 正文独立页：所有章分节 + 每章小目录 + 跳章 |
+| `reader/content-page.css` | 正文独立页样式（含打印样式） |
 | `reader/rag.js` | 浏览器端 RAG 块（`globalThis.RAG_DATA`） |
 | `reader/rag/modal-logic-rag.jsonl` | 标准 RAG 文档，每行一个 JSON 块 |
-| `reader/rag/stats.json` | 块数、标题数、字符数 |
+| `reader/rag/stats.json` | 块数、标题数、章节数、字符数 |
 | `reader/rag/README.md` | RAG 文档说明 |
 
-当前构建结果：96 个标题、100 个 RAG 块、约 6.5 万字符。
+当前构建结果：9 章、96 个标题、100 个 RAG 块、约 6.5 万字符。
 
 RAG 块字段：
 
@@ -133,18 +147,39 @@ RAG 块字段：
 
 - `build_reader.py` 直接解析 DOCX：`Heading 1/2/3` → `h1/h2/h3`，段落 → `<p>`，`List Bullet` → `<ul>`，表格 → `<table>`，带灰色底纹的 Consolas 段落 → `<pre><code>`。
 - 自动跳过封面和 DOCX 里手写的“目录”，用网页侧栏替代。
-- 标题 ID 为 `sec-1`、`sec-2`…，RAG 与目录共用同一套 ID。
-- 侧栏支持筛选；滚动时按当前标题高亮；点击目录平滑跳转。
+- 正文按 H1 拆成 9 个章节；一次只渲染一个章节，顶部/侧栏的章节选择器切换。
+- 标题 ID 为 `sec-1`、`sec-2`…，RAG、目录、独立页共用同一套 ID。
+- 左侧目录：
+  - 章 / 节 / 小节三级，可勾选显示；
+  - 宽度可拖拽（220–480px），保存在 localStorage；
+  - 滚动高亮；点击小标题跳到对应小节。
+- 正文搜索：
+  - 搜索所有章节的正文（复用 RAG 块）；
+  - 结果显示章节、片段和命中标记；
+  - 点击后跳到对应章节/小节，并短暂高亮正文块。
+- 右侧解释栏：
+  - 停靠模式可拖拽左边缘调整宽度（320–760px）；
+  - “浮窗”切换为可拖动、可缩放的浮动窗口；
+  - “钉住”后点击外部不会关闭；未钉住时点击外部自动收起；
+  - 宽度、浮窗位置/大小、钉住状态都会保存。
+- 正文独立页 `content.html`：
+  - 全部章节按 H1 分节；
+  - 每章开头有本章小目录；
+  - 顶部“跳章”下拉、打印按钮、返回阅读器链接；
+  - H2/H3 点击仍可索引到小节。
 - 代码块有“复制”按钮；移动端侧栏可收起。
 
 ## 测试
 
 ```powershell
-# RAG 检索与抽取式回答
+# RAG 检索、章节拆分、抽取式回答
 node reader/tests/test_rag.js
 
-# 页面、目录、划词、面板、设置（headless Chrome）
+# 页面、分章、目录层级、正文搜索、拖拽、浮窗/钉住、设置（headless Chrome）
 node reader/tests/ui_smoke.js
+
+# 正文独立页：9 章、每章小目录、锚点、跳章
+node reader/tests/ui_content_page.js
 ```
 
 API 模式可以用 mock 服务验证，不需要真实 Key。
@@ -190,25 +225,30 @@ const CHROME = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
 
 ```text
 reader/
-├── index.html                 页面外壳
+├── index.html                 阅读器外壳（分章、可拖拽目录/解释栏）
 ├── style.css                  样式
-├── app.js                     目录、滚动高亮、划词、面板、设置
+├── app.js                     分章路由、搜索、目录、划词、浮窗、设置
 ├── explain.js                 BM25 检索、抽取式回答、API 调用
-├── content.js                 DOCX → HTML（生成）
+├── content.js                 按 H1 分章的 HTML（生成）
+├── content.html               正文独立页（生成）
+├── content-page.css           正文独立页样式
 ├── rag.js                     RAG 块（生成）
 ├── rag/
 │   ├── modal-logic-rag.jsonl  标准 RAG 文档
 │   ├── stats.json
 │   └── README.md
-├── build_reader.py            DOCX → HTML + RAG
+├── build_reader.py            DOCX → 分章 HTML + 独立页 + RAG
 ├── serve.py                   静态服务 + API 代理
 ├── screenshot.png             初始界面
 ├── screenshot-panel.png       划词解释面板
+├── screenshot-settings.png    内置 API 设置
+├── screenshot-content.png     正文独立页
 └── tests/
     ├── test_rag.js
     ├── ui_smoke.js
     ├── ui_api_smoke.js
     ├── ui_direct_api_smoke.js
+    ├── ui_content_page.js
     └── mock_api.py
 ```
 
@@ -218,8 +258,8 @@ reader/
 - 内置 API 的质量取决于模型和 Prompt，且受服务商 CORS 策略影响；浏览器直连失败时请改用代理。
 - 没有账号、没有云端存储；所有模型选择/端点保存在浏览器 localStorage，API Key 在 sessionStorage 或服务端环境变量。
 - 没有公式排版引擎（KaTeX/MathJax）；公式以 Unicode 文本呈现，和 DOCX 一致。
-- 没有全文搜索（只有目录筛选和 RAG 检索）；可以后续加。
-- DOCX 更新后需要重新运行 `build_reader.py`。
+- 正文搜索是子串匹配 + RAG 块排序，不是语义搜索；可以后续换成 embedding。
+- DOCX 更新后需要重新运行 `build_reader.py`，并提交生成文件。
 
 ## 与工作区其他部分的关系
 

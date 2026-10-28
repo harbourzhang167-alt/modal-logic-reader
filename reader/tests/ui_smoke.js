@@ -1,5 +1,5 @@
 /*
- * Headless UI smoke test for the reader (Windows, local Chrome).
+ * Headless UI smoke test for the chapter reader (Windows, local Chrome).
  * Run: node tests/ui_smoke.js
  */
 const { spawn } = require("child_process");
@@ -52,8 +52,7 @@ function cdp(ws) {
     if (msg.id && pending.has(msg.id)) {
       const { resolve, reject } = pending.get(msg.id);
       pending.delete(msg.id);
-      if (msg.error) reject(new Error(JSON.stringify(msg.error)));
-      else resolve(msg.result);
+      msg.error ? reject(new Error(JSON.stringify(msg.error))) : resolve(msg.result);
     }
   });
   return (method, params) =>
@@ -74,34 +73,68 @@ async function evalJs(send, expression) {
   return res.result.value;
 }
 
+async function waitReady(send) {
+  for (let i = 0; i < 60; i++) {
+    const ready = await evalJs(
+      send,
+      "document.readyState === 'complete' && typeof ReaderExplain !== 'undefined' && document.querySelectorAll('#chapter-select option').length > 0"
+    );
+    if (ready) return;
+    await sleep(100);
+  }
+  throw new Error("reader did not become ready");
+}
+
 (async () => {
-  const wsUrl = await getWsUrl();
-  const ws = new WebSocket(wsUrl);
+  const ws = new WebSocket(await getWsUrl());
   await new Promise((resolve, reject) => {
     ws.addEventListener("open", resolve);
     ws.addEventListener("error", reject);
   });
   const send = cdp(ws);
   await send("Runtime.enable");
+  await waitReady(send);
 
-  for (let i = 0; i < 60; i++) {
-    const ready = await evalJs(
-      send,
-      "document.readyState === 'complete' && typeof ReaderExplain !== 'undefined' && document.querySelectorAll('#toc a').length > 0"
-    );
-    if (ready) break;
-    await sleep(100);
-  }
+  // reset persisted layout for a deterministic run
+  await evalJs(send, "localStorage.removeItem('modal-reader.ui.v1'); location.reload();");
+  await sleep(600);
+  await waitReady(send);
 
+  // chapter split
+  const chapterCount = await evalJs(send, "document.querySelectorAll('#chapter-select option').length");
+  const h1Count = await evalJs(send, "document.querySelectorAll('#doc h1').length");
   const tocLinks = await evalJs(send, "document.querySelectorAll('#toc a').length");
-  const headingCount = await evalJs(send, "document.querySelectorAll('#doc h1,#doc h2,#doc h3').length");
-  if (tocLinks < 10) throw new Error("TOC was not built: " + tocLinks);
-  if (tocLinks !== headingCount) throw new Error(`TOC mismatch: ${tocLinks} vs ${headingCount}`);
-  console.log("ok   TOC:", tocLinks, "links");
+  if (chapterCount !== 9) throw new Error("expected 9 chapters, got " + chapterCount);
+  if (h1Count !== 1) throw new Error("expected one H1 in the current chapter, got " + h1Count);
+  if (tocLinks < chapterCount) throw new Error("TOC missing chapters: " + tocLinks);
+  console.log("ok   chapters:", chapterCount, "| toc links:", tocLinks, "| h1 in view:", h1Count);
 
   const meta = await evalJs(send, "document.getElementById('doc-meta').textContent");
-  if (!meta.includes("RAG")) throw new Error("meta missing RAG stats: " + meta);
+  if (!meta.includes("章") || !meta.includes("RAG")) throw new Error("meta missing stats: " + meta);
   console.log("ok   meta:", meta.trim());
+
+  // switch to the second lecture by chapter selector
+  const chapterTitle = await evalJs(
+    send,
+    `(() => {
+      const option = [...document.querySelectorAll('#chapter-select option')]
+        .find((o) => o.textContent.includes('第二讲'));
+      const select = document.getElementById('chapter-select');
+      select.value = option.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      return option.textContent;
+    })()`
+  );
+  await sleep(250);
+  const currentH1 = await evalJs(send, "document.querySelector('#doc h1').textContent");
+  if (!currentH1.includes("第二讲")) throw new Error("chapter switch failed: " + currentH1);
+  console.log("ok   chapter switch:", chapterTitle);
+
+  const standaloneHref = await evalJs(send, "document.getElementById('standalone-link').getAttribute('href')");
+  if (!standaloneHref.includes("content.html#")) {
+    throw new Error("standalone link missing: " + standaloneHref);
+  }
+  console.log("ok   standalone link:", standaloneHref);
 
   // select a paragraph containing 反模型
   const selected = await evalJs(
@@ -151,7 +184,7 @@ async function evalJs(send, expression) {
   console.log("ok   local answer:", answer.replace(/\s+/g, " ").slice(0, 90));
   console.log("ok   sources:", sources);
 
-  // screenshot with panel open
+  // screenshot docked panel
   const shot = await send("Page.captureScreenshot", { format: "png" });
   fs.writeFileSync(
     path.join(__dirname, "..", "screenshot-panel.png"),
@@ -159,30 +192,228 @@ async function evalJs(send, expression) {
   );
   console.log("ok   screenshot-panel.png");
 
-  await evalJs(send, "document.getElementById('explain-close').click()");
-
-  // TOC filter
-  const filtered = await evalJs(
+  // docked panel width drag
+  const panelWidthBefore = await evalJs(
     send,
-    `(() => {
-      const input = document.getElementById('toc-search');
-      input.value = '完全性';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      return [...document.querySelectorAll('#toc li:not(.hidden) > a')].map(a => a.textContent);
-    })()`
+    "getComputedStyle(document.documentElement).getPropertyValue('--panel-w').trim()"
   );
-  if (!filtered.length || !filtered.some((t) => t.includes("完全性"))) {
-    throw new Error("TOC filter failed: " + JSON.stringify(filtered));
-  }
-  console.log("ok   TOC filter:", filtered.length, "visible");
   await evalJs(
     send,
     `(() => {
-      const input = document.getElementById('toc-search');
+      const handle = document.getElementById('panel-resizer');
+      const rect = handle.getBoundingClientRect();
+      handle.dispatchEvent(new PointerEvent('pointerdown', {
+        bubbles: true, clientX: rect.left + 2, clientY: 200, pointerId: 2
+      }));
+      window.dispatchEvent(new PointerEvent('pointermove', {
+        bubbles: true, clientX: rect.left - 60, clientY: 200, pointerId: 2
+      }));
+      window.dispatchEvent(new PointerEvent('pointerup', {
+        bubbles: true, clientX: rect.left - 60, clientY: 200, pointerId: 2
+      }));
+    })()`
+  );
+  await sleep(100);
+  const panelWidthAfter = await evalJs(
+    send,
+    "getComputedStyle(document.documentElement).getPropertyValue('--panel-w').trim()"
+  );
+  if (parseInt(panelWidthAfter, 10) <= parseInt(panelWidthBefore, 10)) {
+    throw new Error(`panel resize failed: ${panelWidthBefore} -> ${panelWidthAfter}`);
+  }
+  console.log("ok   panel resize:", panelWidthBefore, "->", panelWidthAfter);
+
+  // float toggle
+  await evalJs(send, "document.getElementById('panel-float').click()");
+  await sleep(100);
+  const floating = await evalJs(
+    send,
+    "document.getElementById('explain-panel').classList.contains('floating')"
+  );
+  if (!floating) throw new Error("panel did not float");
+  console.log("ok   panel float");
+
+  // floating window resize + move
+  const floatBefore = await evalJs(
+    send,
+    `(() => {
+      const p = document.getElementById('explain-panel');
+      return { width: parseFloat(p.style.width), height: parseFloat(p.style.height), left: parseFloat(p.style.left), top: parseFloat(p.style.top) };
+    })()`
+  );
+  await evalJs(
+    send,
+    `(() => {
+      const handle = document.getElementById('float-resizer');
+      const rect = handle.getBoundingClientRect();
+      handle.dispatchEvent(new PointerEvent('pointerdown', {
+        bubbles: true, clientX: rect.left + 4, clientY: rect.top + 4, pointerId: 3
+      }));
+      window.dispatchEvent(new PointerEvent('pointermove', {
+        bubbles: true, clientX: rect.left + 54, clientY: rect.top + 44, pointerId: 3
+      }));
+      window.dispatchEvent(new PointerEvent('pointerup', {
+        bubbles: true, clientX: rect.left + 54, clientY: rect.top + 44, pointerId: 3
+      }));
+    })()`
+  );
+  await sleep(80);
+  const floatResized = await evalJs(
+    send,
+    `(() => {
+      const p = document.getElementById('explain-panel');
+      return { width: parseFloat(p.style.width), height: parseFloat(p.style.height), left: parseFloat(p.style.left), top: parseFloat(p.style.top) };
+    })()`
+  );
+  if (floatResized.width <= floatBefore.width || floatResized.height <= floatBefore.height) {
+    throw new Error(`float resize failed: ${JSON.stringify(floatBefore)} -> ${JSON.stringify(floatResized)}`);
+  }
+
+  await evalJs(
+    send,
+    `(() => {
+      const head = document.querySelector('.panel-head');
+      const hr = head.getBoundingClientRect();
+      head.dispatchEvent(new PointerEvent('pointerdown', {
+        bubbles: true, clientX: hr.left + 40, clientY: hr.top + 20, pointerId: 4
+      }));
+      window.dispatchEvent(new PointerEvent('pointermove', {
+        bubbles: true, clientX: hr.left, clientY: hr.top, pointerId: 4
+      }));
+      window.dispatchEvent(new PointerEvent('pointerup', {
+        bubbles: true, clientX: hr.left, clientY: hr.top, pointerId: 4
+      }));
+    })()`
+  );
+  await sleep(80);
+  const floatMoved = await evalJs(
+    send,
+    `(() => {
+      const p = document.getElementById('explain-panel');
+      return { width: parseFloat(p.style.width), height: parseFloat(p.style.height), left: parseFloat(p.style.left), top: parseFloat(p.style.top) };
+    })()`
+  );
+  if (floatMoved.left >= floatResized.left || floatMoved.top >= floatResized.top) {
+    throw new Error(`float move failed: ${JSON.stringify(floatResized)} -> ${JSON.stringify(floatMoved)}`);
+  }
+  console.log("ok   float resize + move");
+
+  // pin toggle: outside click should keep the floating panel
+  await evalJs(send, "document.getElementById('panel-pin').click()");
+  await sleep(80);
+  const pinned = await evalJs(
+    send,
+    "document.getElementById('panel-pin').getAttribute('aria-pressed')"
+  );
+  if (pinned !== "true") throw new Error("panel did not pin");
+  await evalJs(
+    send,
+    "document.getElementById('doc').dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));"
+  );
+  await sleep(80);
+  const stillOpen = await evalJs(send, "!document.getElementById('explain-panel').hidden");
+  if (!stillOpen) throw new Error("pinned panel closed on outside click");
+  console.log("ok   panel pin keeps panel open");
+
+  // unpin + outside click closes
+  await evalJs(send, "document.getElementById('panel-pin').click()");
+  await evalJs(
+    send,
+    "document.getElementById('doc').dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));"
+  );
+  await sleep(80);
+  const closed = await evalJs(send, "document.getElementById('explain-panel').hidden");
+  if (!closed) throw new Error("unpinned panel did not close on outside click");
+  console.log("ok   unpinned panel closes");
+
+  // full-text search
+  const searchInfo = await evalJs(
+    send,
+    `(() => {
+      const input = document.getElementById('content-search');
+      input.value = '完全性';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      return true;
+    })()`
+  );
+  await sleep(250);
+  const searchState = await evalJs(
+    send,
+    `({
+      results: document.querySelectorAll('#search-results .search-result').length,
+      tocHidden: document.getElementById('toc').hidden,
+      resultsHidden: document.getElementById('search-results').hidden
+    })`
+  );
+  if (!searchState.results || !searchState.tocHidden || searchState.resultsHidden) {
+    throw new Error("content search failed: " + JSON.stringify(searchState));
+  }
+  console.log("ok   content search results:", searchState.results);
+
+  await evalJs(send, "document.querySelector('#search-results .search-result').click()");
+  await sleep(250);
+  const searchHit = await evalJs(send, "document.getElementById('doc').textContent.includes('完全性')");
+  if (!searchHit) throw new Error("search result did not navigate to matching content");
+  console.log("ok   search result navigation");
+
+  await evalJs(
+    send,
+    `(() => {
+      const input = document.getElementById('content-search');
       input.value = '';
       input.dispatchEvent(new Event('input', { bubbles: true }));
     })()`
   );
+  await sleep(100);
+
+  // TOC level toggle
+  const levelState = await evalJs(
+    send,
+    `(() => {
+      const box = document.querySelector('.toc-levels input[data-level="2"]');
+      box.checked = false;
+      box.dispatchEvent(new Event('change', { bubbles: true }));
+      const hidden = [...document.querySelectorAll('#section-list li.level-2')]
+        .every((li) => li.classList.contains('hidden'));
+      box.checked = true;
+      box.dispatchEvent(new Event('change', { bubbles: true }));
+      return hidden;
+    })()`
+  );
+  if (!levelState) throw new Error("TOC level toggle failed");
+  console.log("ok   TOC level toggle");
+
+  // sidebar width drag
+  const widthBefore = await evalJs(
+    send,
+    "getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w').trim()"
+  );
+  await evalJs(
+    send,
+    `(() => {
+      const handle = document.getElementById('sidebar-resizer');
+      const rect = handle.getBoundingClientRect();
+      handle.dispatchEvent(new PointerEvent('pointerdown', {
+        bubbles: true, clientX: rect.left + 2, clientY: 200, pointerId: 1
+      }));
+      window.dispatchEvent(new PointerEvent('pointermove', {
+        bubbles: true, clientX: rect.left + 62, clientY: 200, pointerId: 1
+      }));
+      window.dispatchEvent(new PointerEvent('pointerup', {
+        bubbles: true, clientX: rect.left + 62, clientY: 200, pointerId: 1
+      }));
+      return true;
+    })()`
+  );
+  await sleep(100);
+  const widthAfter = await evalJs(
+    send,
+    "getComputedStyle(document.documentElement).getPropertyValue('--sidebar-w').trim()"
+  );
+  if (parseInt(widthAfter, 10) <= parseInt(widthBefore, 10)) {
+    throw new Error(`sidebar resize failed: ${widthBefore} -> ${widthAfter}`);
+  }
+  console.log("ok   sidebar resize:", widthBefore, "->", widthAfter);
 
   // settings modal
   await evalJs(send, "document.getElementById('settings-btn').click()");

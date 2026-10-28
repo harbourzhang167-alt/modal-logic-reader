@@ -20,6 +20,7 @@
     </div>
     <div class="top-actions">
       <span id="mode-badge" class="mode-badge">本地 RAG</span>
+      <a id="standalone-link" class="ghost-btn standalone-link" href="content.html" target="_blank" rel="noopener">正文独立页</a>
       <button id="settings-btn" class="ghost-btn">设置</button>
     </div>
   </header>
@@ -30,11 +31,27 @@
         <span>目录</span>
         <span id="toc-count" class="muted"></span>
       </div>
-      <input id="toc-search" class="toc-search" type="search" placeholder="筛选章节…" autocomplete="off">
-      <nav id="toc" class="toc" aria-label="目录"></nav>
+
+      <div class="toc-levels" aria-label="目录层级">
+        <label><input type="checkbox" data-level="1" checked> 章</label>
+        <label><input type="checkbox" data-level="2" checked> 节</label>
+        <label><input type="checkbox" data-level="3" checked> 小节</label>
+      </div>
+
+      <select id="chapter-select" class="chapter-select" aria-label="切换章节"></select>
+
+      <input id="content-search" class="toc-search" type="search" placeholder="搜索正文内容…" autocomplete="off">
+      <div id="search-results" class="search-results" hidden></div>
+
+      <nav id="toc" class="toc" aria-label="目录">
+        <ul id="chapter-list" class="chapter-list"></ul>
+        <div id="section-label" class="toc-subhead">本章</div>
+        <ul id="section-list" class="section-list"></ul>
+      </nav>
+
       <div class="sidebar-tip">
         选中正文中的词或句子，点“解释”。<br>
-        本地 RAG 模式无需联网。
+        本地 RAG 模式无需联网；目录和解释栏都可拖动调整。
       </div>
     </aside>
 
@@ -46,6 +63,8 @@
         <div>本地 RAG 数据：<code>reader/rag/modal-logic-rag.jsonl</code></div>
       </footer>
     </main>
+
+    <div id="sidebar-resizer" class="sidebar-resizer" title="拖动调整目录宽度" aria-hidden="true"></div>
   </div>
 
   <div id="selection-toolbar" class="selection-toolbar" hidden>
@@ -54,13 +73,17 @@
     <button id="copy-selection">复制</button>
   </div>
 
-  <aside id="explain-panel" class="explain-panel" hidden aria-live="polite">
+  <aside id="explain-panel" class="explain-panel docked" hidden aria-live="polite">
     <div class="panel-head">
       <div>
         <span class="eyebrow">划词解释</span>
         <h2>解释</h2>
       </div>
-      <button id="explain-close" class="icon-btn" aria-label="关闭">×</button>
+      <div class="panel-head-actions">
+        <button id="panel-float" class="mini-btn" type="button" aria-pressed="false">浮窗</button>
+        <button id="panel-pin" class="mini-btn" type="button" aria-pressed="false">钉住</button>
+        <button id="explain-close" class="icon-btn" aria-label="关闭">×</button>
+      </div>
     </div>
     <div class="panel-body">
       <blockquote id="explain-selection" class="selection-quote"></blockquote>
@@ -72,6 +95,8 @@
       <span id="explain-mode" class="mode-badge">本地 RAG</span>
       <span class="hint">基于讲义检索；未覆盖时会明确说明</span>
     </div>
+    <div id="panel-resizer" class="panel-resizer" title="拖动调整宽度" aria-hidden="true"></div>
+    <div id="float-resizer" class="float-resizer" title="拖动调整大小" aria-hidden="true"></div>
   </aside>
 
   <div id="overlay" class="overlay" hidden></div>
