@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>模态逻辑六讲 · 交互讲义</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="reading-progress" class="reading-progress"></div>
+
+  <header class="topbar">
+    <button id="menu-toggle" class="icon-btn" aria-label="打开目录">☰</button>
+    <div class="brand">
+      <span class="brand-mark">□</span>
+      <div>
+        <h1>模态逻辑六讲</h1>
+        <p>交互讲义 · 划词解释</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="mode-badge" class="mode-badge">本地 RAG</span>
+      <button id="settings-btn" class="ghost-btn">设置</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-head">
+        <span>目录</span>
+        <span id="toc-count" class="muted"></span>
+      </div>
+      <input id="toc-search" class="toc-search" type="search" placeholder="筛选章节…" autocomplete="off">
+      <nav id="toc" class="toc" aria-label="目录"></nav>
+      <div class="sidebar-tip">
+        选中正文中的词或句子，点“解释”。<br>
+        本地 RAG 模式无需联网。
+      </div>
+    </aside>
+
+    <main class="main">
+      <div id="doc-meta" class="doc-meta"></div>
+      <article id="doc" class="doc"></article>
+      <footer class="doc-footer">
+        <div>讲义来源：<code>course/模态逻辑六讲讲义.docx</code></div>
+        <div>本地 RAG 数据：<code>reader/rag/modal-logic-rag.jsonl</code></div>
+      </footer>
+    </main>
+  </div>
+
+  <div id="selection-toolbar" class="selection-toolbar" hidden>
+    <button id="explain-selection-btn">解释</button>
+    <span class="toolbar-divider"></span>
+    <button id="copy-selection">复制</button>
+  </div>
+
+  <aside id="explain-panel" class="explain-panel" hidden aria-live="polite">
+    <div class="panel-head">
+      <div>
+        <span class="eyebrow">划词解释</span>
+        <h2>解释</h2>
+      </div>
+      <button id="explain-close" class="icon-btn" aria-label="关闭">×</button>
+    </div>
+    <div class="panel-body">
+      <blockquote id="explain-selection" class="selection-quote"></blockquote>
+      <div id="explain-status" class="panel-status"></div>
+      <div id="explain-answer" class="panel-answer"></div>
+      <div id="explain-sources" class="panel-sources"></div>
+    </div>
+    <div class="panel-foot">
+      <span id="explain-mode" class="mode-badge">本地 RAG</span>
+      <span class="hint">基于讲义检索；未覆盖时会明确说明</span>
+    </div>
+  </aside>
+
+  <div id="overlay" class="overlay" hidden></div>
+
+  <div id="settings-modal" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>解释设置</h2>
+        <button id="settings-close" class="icon-btn" aria-label="关闭">×</button>
+      </div>
+
+      <div class="field">
+        <span class="field-label">模式</span>
+        <div class="segmented">
+          <label><input type="radio" name="mode" value="local" checked> 本地 RAG</label>
+          <label><input type="radio" name="mode" value="api"> API</label>
+        </div>
+      </div>
+
+      <div id="api-fields">
+        <label class="field">
+          <span class="field-label">代理 / 接口地址</span>
+          <input id="api-endpoint" type="text" value="/api/explain" spellcheck="false">
+        </label>
+        <label class="field">
+          <span class="field-label">模型</span>
+          <input id="api-model" type="text" value="gpt-4o-mini" spellcheck="false">
+        </label>
+        <label class="field">
+          <span class="field-label">API Key（直连时可选）</span>
+          <input id="api-key" type="password" placeholder="仅保存在当前标签页" autocomplete="off">
+        </label>
+        <p class="hint">
+          推荐运行 <code>python reader/serve.py</code>，保持默认 <code>/api/explain</code>，
+          由本地代理读取 <code>OPENAI_API_KEY</code>；这样浏览器不接触 Key。
+        </p>
+      </div>
+
+      <div class="modal-actions">
+        <button id="settings-save" class="primary-btn">保存</button>
+        <button id="settings-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="rag.js"></script>
+  <script src="content.js"></script>
+  <script src="explain.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
