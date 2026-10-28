@@ -163,4 +163,25 @@ node reader/tests/ui_api_smoke.js
 
 ## License
 
-本仓库暂未附 License。发布前如需开源许可，建议代码使用 MIT、讲义内容使用 CC BY 4.0；请按你的意愿添加 `LICENSE`。
+Copyright (c) 2026 harbourzhang167-alt.
+
+This repository uses a **split license**:
+
+- **Code** — MIT License. See [LICENSE](LICENSE).
+  - `reader/app.js`, `reader/explain.js`, `reader/build_reader.py`, `reader/serve.py`
+  - `reader/index.html`, `reader/style.css`
+  - tests, build scripts, GitHub Actions workflow
+- **Teaching content** — CC BY 4.0. See [CONTENT-LICENSE.md](CONTENT-LICENSE.md).
+  - `course/模态逻辑六讲讲义.docx`
+  - `reader/content.js`, `reader/rag.js`, `reader/rag/*`
+  - screenshots and prose documentation
+- **Third-party material** cited or linked in the teaching content remains under
+  its own license (SEP, Open Logic Project / *Boxes and Diamonds*, Isabelle AFP,
+  QMLTP, etc.); it is not relicensed here.
+
+Attribution example for the content:
+
+> 模态逻辑六讲 · 交互讲义, by harbourzhang167-alt,
+> <https://github.com/harbourzhang167-alt/modal-logic-reader>,
+> licensed under CC BY 4.0.
+
