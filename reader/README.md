@@ -8,9 +8,10 @@
 - 左侧目录（H1–H3，可筛选、滚动高亮）；
 - 右侧正文（标题、段落、列表、表格、代码块）；
 - 选中正文中的词/句，弹出“解释”按钮；
-- 解释模式二选一：
+- 解释模式三选一：
   - **本地 RAG**：离线，BM25 检索 + 抽取式回答，不需要 API；
-  - **API**：通过本地代理或 OpenAI 兼容接口生成回答，自动附带讲义来源。
+  - **内置 API**：在网页设置里填服务商、模型和 Key，浏览器直接调用 OpenAI 兼容接口，**不需要运行 Python**；
+  - **代理**：通过本地或远程代理调用，Key 在服务端（适合线上部署/团队使用）。
 
 ## 快速开始
 
@@ -26,22 +27,38 @@ python reader/serve.py --port 8010
 
 然后打开 <http://127.0.0.1:8010/>。
 
-### 使用 API
+### 使用内置 API（不需要 Python）
 
-推荐用本地代理，API Key 不进入浏览器：
+打开页面 → 右上角“设置” → 模式选 **内置 API**：
+
+1. 选服务商预设（OpenAI / DeepSeek / OpenRouter / SiliconFlow / 自定义）；
+2. 确认 API 地址与模型；
+3. 填 API Key（只保存在当前标签页的 `sessionStorage`）；
+4. 点“测试连接”确认可用；
+5. 保存。
+
+之后选中正文内容，点“解释”，浏览器会直接请求该 API，并把本地 RAG 检索到的讲义片段一起发给模型。  
+不需要运行 `serve.py`，也不需要本地 Python 环境。
+
+注意：
+
+- 浏览器直连受 **CORS** 限制。OpenAI 官方通常不建议浏览器直连；DeepSeek、OpenRouter、SiliconFlow 或自建网关是否允许，取决于服务商。
+- 如果“测试连接”提示 CORS/网络错误，改用下面的“代理”模式，或换支持浏览器跨域的网关。
+- Key 会出现在浏览器请求头里；不要在公共电脑上保存，使用后可在设置里清空。
+
+### 使用代理（可选，Key 在服务端）
 
 ```powershell
 $env:READER_API_KEY = "sk-..."
-$env:READER_API_BASE = "https://api.openai.com/v1"   # 可换成任何 OpenAI 兼容地址
+$env:READER_API_BASE = "https://api.openai.com/v1"   # 任意 OpenAI 兼容地址
 $env:READER_MODEL = "gpt-4o-mini"
 python reader/serve.py --port 8010
 ```
 
-打开 <http://127.0.0.1:8010/>，右上角“设置” → 模式选 **API** → 地址保持 `/api/explain` → 保存。
+打开 <http://127.0.0.1:8010/>，右上角“设置” → 模式选 **代理** → 地址保持 `/api/explain` → 保存。
 
-代理会在 `POST /api/explain` 里把选中内容、所在章节和 RAG 片段发给模型，Key 只保存在服务端。
-
-如果不想跑代理，也可以在设置里填一个完整的 OpenAI 兼容 base URL（例如 `https://api.openai.com/v1`）和 Key，由浏览器直连；但很多服务商会有 CORS 限制，且 Key 会暴露在前端，**不推荐**。
+代理会在 `POST /api/explain` 里把选中内容、所在章节和 RAG 片段发给模型，Key 只保存在服务端。  
+GitHub Pages 是静态站，线上要使用 API 时需要一个远程代理（本地 `serve.py` 不在线上运行）。
 
 ## 从 DOCX 重新生成
 
@@ -95,14 +112,20 @@ RAG 块字段：
 
 这是**抽取式**回答，不是生成式模型；优点是离线、可复现、不会编造，缺点是语言不如 LLM 流畅。需要更自然的解释就切到 API 模式。
 
-### API
+### API（内置直连或代理）
+
+**内置 API：**
 
 1. 同样先做本地 RAG 检索；
-2. 把选中内容、章节、top 4 片段打包发给代理；
-3. 代理调用 OpenAI 兼容的 `/chat/completions`；
-4. 返回的回答显示在面板里，来源仍用本地检索结果。
+2. 浏览器把选中内容、章节、top 4 片段和 API Key 直接发到配置的 `/chat/completions`；
+3. 返回的回答显示在面板里，来源仍用本地检索结果。
 
-Prompt 要求模型“只根据讲义片段回答；讲义没覆盖就明确说未覆盖；用 [1][2] 标注来源”，以降低幻觉。
+**代理：**
+
+1. 浏览器把同样的 payload 发到 `serve.py` 的 `/api/explain`；
+2. 代理调用 OpenAI 兼容接口，Key 只在服务端。
+
+两种方式共用同一个 Prompt：“只根据讲义片段回答；讲义没覆盖就明确说未覆盖；用 [1][2] 标注来源”，以降低幻觉。
 
 ## 目录与正文
 
@@ -122,7 +145,22 @@ node reader/tests/test_rag.js
 node reader/tests/ui_smoke.js
 ```
 
-API 模式可以用 mock 服务验证，不需要真实 Key：
+API 模式可以用 mock 服务验证，不需要真实 Key。
+
+**内置 API 直连测试：**
+
+```powershell
+# 终端 1：CORS mock OpenAI
+python reader/tests/mock_api.py
+
+# 终端 2：静态 reader
+python reader/serve.py --port 8013
+
+# 终端 3：浏览器直连 mock，不经过 reader 代理
+node reader/tests/ui_direct_api_smoke.js
+```
+
+**代理模式测试：**
 
 ```powershell
 # 终端 1：mock OpenAI
@@ -168,13 +206,14 @@ reader/
     ├── test_rag.js
     ├── ui_smoke.js
     ├── ui_api_smoke.js
+    ├── ui_direct_api_smoke.js
     └── mock_api.py
 ```
 
 ## 边界
 
 - 本地 RAG 是检索 + 抽取，不是生成式问答；它不会“推理”出讲义里没有的结论。
-- API 模式的质量取决于模型和 Prompt；代理只做转发，不做内容审核。
+- 内置 API 的质量取决于模型和 Prompt，且受服务商 CORS 策略影响；浏览器直连失败时请改用代理。
 - 没有账号、没有云端存储；所有模型选择/端点保存在浏览器 localStorage，API Key 在 sessionStorage 或服务端环境变量。
 - 没有公式排版引擎（KaTeX/MathJax）；公式以 Unicode 文本呈现，和 DOCX 一致。
 - 没有全文搜索（只有目录筛选和 RAG 检索）；可以后续加。

@@ -724,7 +724,7 @@ button, input { font: inherit; }
 
 .field-label { display: block; margin-bottom: 5px; }
 
-.field input[type="text"], .field input[type="password"] {
+.field input[type="text"], .field input[type="password"], .field select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -735,7 +735,7 @@ button, input { font: inherit; }
   background: #fbfcfe;
 }
 
-.field input:focus { border-color: var(--teal); }
+.field input:focus, .field select:focus { border-color: var(--teal); }
 
 .segmented {
   display: flex;
@@ -755,12 +755,47 @@ button, input { font: inherit; }
   gap: 6px;
 }
 
+.segmented.three label {
+  font-size: 12px;
+  padding: 7px 6px;
+  justify-content: center;
+}
+
 .segmented label:has(input:checked) {
   border-color: #9cc9dd;
   background: #eef8fc;
   color: var(--navy);
   font-weight: 600;
 }
+
+.api-test-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.api-test-row button {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--navy);
+  border-radius: 7px;
+  padding: 5px 10px;
+  font-family: "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.api-test-row button:hover { background: #eef5fb; border-color: #c4d2e4; }
+
+.api-test-status {
+  font-family: "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.api-test-status.ok { color: var(--green); }
+.api-test-status.error { color: var(--red); }
 
 .hint {
   color: var(--muted);

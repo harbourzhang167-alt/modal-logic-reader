@@ -103,13 +103,13 @@ async function waitReady(send) {
 
   await evalJs(
     send,
-    `localStorage.setItem('modal-reader.settings.v1', JSON.stringify({mode:'api', endpoint:'/api/explain', model:'mock'})); location.reload();`
+    `localStorage.setItem('modal-reader.settings.v1', JSON.stringify({mode:'proxy', proxyEndpoint:'/api/explain', model:'mock'})); location.reload();`
   );
   await sleep(600);
   await waitReady(send);
 
   const badge = await evalJs(send, "document.getElementById('mode-badge').textContent");
-  if (badge !== "API") throw new Error("mode badge is not API: " + badge);
+  if (badge !== "代理") throw new Error("mode badge is not 代理: " + badge);
   console.log("ok   mode badge:", badge);
 
   await evalJs(

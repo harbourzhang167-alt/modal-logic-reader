@@ -85,29 +85,60 @@
 
       <div class="field">
         <span class="field-label">模式</span>
-        <div class="segmented">
+        <div class="segmented three">
           <label><input type="radio" name="mode" value="local" checked> 本地 RAG</label>
-          <label><input type="radio" name="mode" value="api"> API</label>
+          <label><input type="radio" name="mode" value="direct"> 内置 API</label>
+          <label><input type="radio" name="mode" value="proxy"> 代理</label>
         </div>
       </div>
 
-      <div id="api-fields">
-        <label class="field">
-          <span class="field-label">代理 / 接口地址</span>
-          <input id="api-endpoint" type="text" value="/api/explain" spellcheck="false">
-        </label>
-        <label class="field">
-          <span class="field-label">模型</span>
-          <input id="api-model" type="text" value="gpt-4o-mini" spellcheck="false">
-        </label>
-        <label class="field">
-          <span class="field-label">API Key（直连时可选）</span>
-          <input id="api-key" type="password" placeholder="仅保存在当前标签页" autocomplete="off">
-        </label>
-        <p class="hint">
-          推荐运行 <code>python reader/serve.py</code>，保持默认 <code>/api/explain</code>，
-          由本地代理读取 <code>OPENAI_API_KEY</code>；这样浏览器不接触 Key。
-        </p>
+      <div id="api-fields" hidden>
+        <div id="direct-fields">
+          <label class="field">
+            <span class="field-label">服务商预设</span>
+            <select id="api-provider">
+              <option value="openai">OpenAI</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="openrouter">OpenRouter</option>
+              <option value="siliconflow">SiliconFlow</option>
+              <option value="custom">自定义</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">API 地址（base URL 或完整 /chat/completions）</span>
+            <input id="api-endpoint" type="text" value="https://api.openai.com/v1" spellcheck="false" autocomplete="off">
+          </label>
+          <label class="field">
+            <span class="field-label">模型</span>
+            <input id="api-model" type="text" value="gpt-4o-mini" spellcheck="false" autocomplete="off">
+          </label>
+          <label class="field">
+            <span class="field-label">API Key（仅当前标签页）</span>
+            <input id="api-key" type="password" placeholder="sk-..." autocomplete="off">
+          </label>
+          <div class="api-test-row">
+            <button id="api-test" type="button">测试连接</button>
+            <span id="api-test-status" class="api-test-status"></span>
+          </div>
+          <p class="hint">
+            浏览器直接请求该 API，不需要运行 Python。Key 只放在当前标签页的
+            <code>sessionStorage</code>，不会发送到本项目的服务器。<br>
+            若提示 CORS/网络错误，说明该服务商不允许浏览器直连：改用“代理”模式，
+            或换支持 CORS 的网关。OpenAI 官方通常不建议浏览器直连。
+          </p>
+        </div>
+
+        <div id="proxy-fields" hidden>
+          <label class="field">
+            <span class="field-label">代理地址</span>
+            <input id="api-proxy-endpoint" type="text" value="/api/explain" spellcheck="false" autocomplete="off">
+          </label>
+          <p class="hint">
+            需要运行 <code>python reader/serve.py</code>，由代理读取
+            <code>READER_API_KEY</code>；浏览器不接触 Key。GitHub Pages 是静态站，
+            线上使用 API 时还需要一个远程代理。
+          </p>
+        </div>
       </div>
 
       <div class="modal-actions">

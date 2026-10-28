@@ -58,6 +58,21 @@ test("retrieval: exact formula", () => {
   console.log("     top:", top[0].chunk.section, "score", top[0].score.toFixed(2));
 });
 
+test("chat completions URL normalization", () => {
+  assert.strictEqual(
+    R.chatCompletionsUrl("https://api.openai.com/v1"),
+    "https://api.openai.com/v1/chat/completions"
+  );
+  assert.strictEqual(
+    R.chatCompletionsUrl("https://example.test/chat/completions"),
+    "https://example.test/chat/completions"
+  );
+  assert.strictEqual(
+    R.chatCompletionsUrl("https://api.deepseek.com/"),
+    "https://api.deepseek.com/chat/completions"
+  );
+});
+
 test("local answer has points and sources", () => {
   const results = retriever.search("反模型", 4);
   const ans = R.answer("反模型", results);

@@ -275,28 +275,62 @@
   }
 
   /**
+   * Normalize a base URL or a full chat completions URL.
+   */
+  function chatCompletionsUrl(baseUrl) {
+    const url = String(baseUrl || "").trim().replace(/\/+$/, "");
+    if (!url) throw new Error("未填写 API 地址");
+    if (/\/chat\/completions$/i.test(url)) return url;
+    return url + "/chat/completions";
+  }
+
+  function isNetworkError(err) {
+    return (
+      err instanceof TypeError ||
+      /failed to fetch|networkerror|load failed|network request failed/i.test(
+        String(err && err.message ? err.message : err)
+      )
+    );
+  }
+
+  /**
    * Call an OpenAI-compatible endpoint directly from the browser.
-   * Note: many providers block browser CORS; a local proxy is safer.
+   * Note: many providers block browser CORS; a local/remote proxy is safer.
    */
   async function callOpenAI(baseUrl, apiKey, model, payload) {
     const messages = buildMessages(payload.selection, payload.heading, payload.results);
-    const url = String(baseUrl).replace(/\/+$/, "") + "/chat/completions";
+    const url = chatCompletionsUrl(baseUrl);
     const headers = { "Content-Type": "application/json" };
     if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
 
-    const data = await requestJson(
-      url,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model: model || "gpt-4o-mini",
-          messages,
-          temperature: 0.2,
-        }),
-      },
-      60000
-    );
+    let data;
+    try {
+      data = await requestJson(
+        url,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model: model || "gpt-4o-mini",
+            messages,
+            temperature: 0.2,
+          }),
+        },
+        60000
+      );
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        throw new Error("API 请求超时（60 秒）。");
+      }
+      if (isNetworkError(err)) {
+        throw new Error(
+          "浏览器直连失败（可能是 CORS 或网络限制）。" +
+            "请改用“代理”模式，或使用允许浏览器跨域的网关。原始错误：" +
+            (err && err.message ? err.message : err)
+        );
+      }
+      throw err;
+    }
 
     const content =
       data &&
@@ -308,6 +342,48 @@
     return content;
   }
 
+  /**
+   * Tiny request used by the settings dialog to verify endpoint/key/model.
+   */
+  async function testConnection(baseUrl, apiKey, model) {
+    const url = chatCompletionsUrl(baseUrl);
+    const headers = { "Content-Type": "application/json" };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+    let data;
+    try {
+      data = await requestJson(
+        url,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            model: model || "gpt-4o-mini",
+            messages: [{ role: "user", content: "只回复 OK" }],
+            temperature: 0,
+          }),
+        },
+        30000
+      );
+    } catch (err) {
+      if (isNetworkError(err)) {
+        throw new Error(
+          "连接失败（可能是 CORS/网络）。可改用代理模式，或使用支持浏览器跨域的网关。"
+        );
+      }
+      throw err;
+    }
+
+    const content =
+      data &&
+      data.choices &&
+      data.choices[0] &&
+      data.choices[0].message &&
+      data.choices[0].message.content;
+    if (!content) throw new Error("接口可达，但返回中没有 choices[0].message.content");
+    return content.trim().slice(0, 80) || "OK";
+  }
+
   const api = {
     tokenize,
     normalize,
@@ -315,8 +391,10 @@
     createRetriever,
     answer,
     buildMessages,
+    chatCompletionsUrl,
     callProxy,
     callOpenAI,
+    testConnection,
   };
 
   if (typeof module !== "undefined" && module.exports) module.exports = api;

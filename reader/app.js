@@ -44,10 +44,42 @@
   const SETTINGS_KEY = "modal-reader.settings.v1";
   const KEY_KEY = "modal-reader.api-key.v1";
 
+  const PROVIDERS = {
+    openai: {
+      label: "OpenAI",
+      endpoint: "https://api.openai.com/v1",
+      model: "gpt-4o-mini",
+    },
+    deepseek: {
+      label: "DeepSeek",
+      endpoint: "https://api.deepseek.com",
+      model: "deepseek-chat",
+    },
+    openrouter: {
+      label: "OpenRouter",
+      endpoint: "https://openrouter.ai/api/v1",
+      model: "openai/gpt-4o-mini",
+    },
+    siliconflow: {
+      label: "SiliconFlow",
+      endpoint: "https://api.siliconflow.cn/v1",
+      model: "Qwen/Qwen2.5-7B-Instruct",
+    },
+    custom: { label: "自定义", endpoint: "", model: "" },
+  };
+
+  const MODE_LABELS = {
+    local: "本地 RAG",
+    direct: "内置 API",
+    proxy: "代理",
+  };
+
   const settings = {
     mode: "local",
-    endpoint: "/api/explain",
-    model: "gpt-4o-mini",
+    provider: "openai",
+    directEndpoint: PROVIDERS.openai.endpoint,
+    proxyEndpoint: "/api/explain",
+    model: PROVIDERS.openai.model,
     apiKey: "",
   };
 
@@ -295,11 +327,7 @@
   }
 
   function renderLocal(ans, note) {
-    panelMode.textContent = note
-      ? "本地 RAG（回退）"
-      : settings.mode === "api"
-        ? "API"
-        : "本地 RAG";
+    panelMode.textContent = note ? "本地 RAG（回退）" : MODE_LABELS[settings.mode] || "本地 RAG";
     setPanelStatus(note || `本地 RAG：命中 ${ans.sources.length} 个相关段落`, note ? "warn" : "");
     const parts = [`<p>${escapeHtml(ans.summary)}</p>`];
     if (ans.points.length) {
@@ -341,12 +369,22 @@
       results,
     };
 
-    if (!settings.endpoint) throw new Error("未配置 API 地址");
-
-    if (isProxyEndpoint(settings.endpoint)) {
-      return await R.callProxy(settings.endpoint, payload);
+    if (settings.mode === "proxy") {
+      if (!settings.proxyEndpoint) throw new Error("未配置代理地址");
+      return await R.callProxy(settings.proxyEndpoint, payload);
     }
-    return await R.callOpenAI(settings.endpoint, settings.apiKey, settings.model, payload);
+
+    if (settings.mode === "direct") {
+      if (!settings.directEndpoint) throw new Error("未配置 API 地址");
+      return await R.callOpenAI(
+        settings.directEndpoint,
+        settings.apiKey,
+        settings.model,
+        payload
+      );
+    }
+
+    throw new Error("未选择 API 模式");
   }
 
   async function runExplain(selection) {
@@ -354,7 +392,7 @@
     panelSelection.textContent = selection.text;
     panelAnswer.innerHTML = "";
     panelSources.innerHTML = "";
-    panelMode.textContent = settings.mode === "api" ? "API" : "本地 RAG";
+    panelMode.textContent = MODE_LABELS[settings.mode] || "本地 RAG";
     setPanelStatus("正在检索讲义并生成解释…", "loading");
 
     lastResults = retriever.search(`${selection.text} ${selection.heading || ""}`, 5);
@@ -365,7 +403,10 @@
       return;
     }
 
-    setPanelStatus("正在调用 API（失败会自动回退到本地 RAG）…", "loading");
+    setPanelStatus(
+      `正在调用${MODE_LABELS[settings.mode]}（失败会自动回退到本地 RAG）…`,
+      "loading"
+    );
     try {
       const text = await apiExplain(selection, lastResults);
       renderApi(text, lastLocal.sources);
@@ -383,8 +424,26 @@
     try {
       const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null");
       if (stored && typeof stored === "object") {
-        if (stored.mode === "api" || stored.mode === "local") settings.mode = stored.mode;
-        if (typeof stored.endpoint === "string") settings.endpoint = stored.endpoint;
+        if (stored.mode === "api") {
+          const endpoint = typeof stored.endpoint === "string" ? stored.endpoint : "";
+          settings.mode = isProxyEndpoint(endpoint) ? "proxy" : "direct";
+        } else if (["local", "direct", "proxy"].includes(stored.mode)) {
+          settings.mode = stored.mode;
+        }
+
+        if (typeof stored.provider === "string" && PROVIDERS[stored.provider]) {
+          settings.provider = stored.provider;
+        }
+        if (typeof stored.directEndpoint === "string") {
+          settings.directEndpoint = stored.directEndpoint;
+        } else if (typeof stored.endpoint === "string" && !isProxyEndpoint(stored.endpoint)) {
+          settings.directEndpoint = stored.endpoint;
+        }
+        if (typeof stored.proxyEndpoint === "string") {
+          settings.proxyEndpoint = stored.proxyEndpoint;
+        } else if (typeof stored.endpoint === "string" && isProxyEndpoint(stored.endpoint)) {
+          settings.proxyEndpoint = stored.endpoint;
+        }
         if (typeof stored.model === "string") settings.model = stored.model;
       }
     } catch (_) {}
@@ -397,14 +456,27 @@
   function saveSettings() {
     const mode = document.querySelector('input[name="mode"]:checked');
     settings.mode = mode ? mode.value : "local";
-    settings.endpoint = document.getElementById("api-endpoint").value.trim() || "/api/explain";
-    settings.model = document.getElementById("api-model").value.trim() || "gpt-4o-mini";
+    settings.provider = document.getElementById("api-provider").value;
+    settings.directEndpoint =
+      document.getElementById("api-endpoint").value.trim() ||
+      (PROVIDERS[settings.provider] ? PROVIDERS[settings.provider].endpoint : "");
+    settings.proxyEndpoint =
+      document.getElementById("api-proxy-endpoint").value.trim() || "/api/explain";
+    settings.model =
+      document.getElementById("api-model").value.trim() ||
+      (PROVIDERS[settings.provider] ? PROVIDERS[settings.provider].model : "gpt-4o-mini");
     settings.apiKey = document.getElementById("api-key").value.trim();
 
     try {
       localStorage.setItem(
         SETTINGS_KEY,
-        JSON.stringify({ mode: settings.mode, endpoint: settings.endpoint, model: settings.model })
+        JSON.stringify({
+          mode: settings.mode,
+          provider: settings.provider,
+          directEndpoint: settings.directEndpoint,
+          proxyEndpoint: settings.proxyEndpoint,
+          model: settings.model,
+        })
       );
       if (settings.apiKey) sessionStorage.setItem(KEY_KEY, settings.apiKey);
       else sessionStorage.removeItem(KEY_KEY);
@@ -412,12 +484,75 @@
 
     syncModeUI();
     document.getElementById("settings-modal").hidden = true;
-    showToast(settings.mode === "api" ? "已切换到 API 模式" : "已切换到本地 RAG 模式");
+    showToast(`已切换到${MODE_LABELS[settings.mode] || settings.mode}`);
   }
 
   function syncModeUI() {
-    modeBadge.textContent = settings.mode === "api" ? "API" : "本地 RAG";
-    panelMode.textContent = settings.mode === "api" ? "API" : "本地 RAG";
+    const label = MODE_LABELS[settings.mode] || "本地 RAG";
+    modeBadge.textContent = label;
+    panelMode.textContent = label;
+  }
+
+  function updateSettingsVisibility() {
+    const mode = document.querySelector('input[name="mode"]:checked');
+    const current = mode ? mode.value : "local";
+    document.getElementById("api-fields").hidden = current === "local";
+    document.getElementById("direct-fields").hidden = current !== "direct";
+    document.getElementById("proxy-fields").hidden = current !== "proxy";
+
+    const status = document.getElementById("api-test-status");
+    status.textContent = "";
+    status.className = "api-test-status";
+
+    if (current === "direct") {
+      const endpoint = document.getElementById("api-endpoint");
+      const model = document.getElementById("api-model");
+      if (!endpoint.value) endpoint.value = settings.directEndpoint;
+      if (!model.value) model.value = settings.model;
+    }
+    if (current === "proxy") {
+      const proxy = document.getElementById("api-proxy-endpoint");
+      if (!proxy.value) proxy.value = settings.proxyEndpoint;
+    }
+  }
+
+  function applyProviderPreset() {
+    const provider = document.getElementById("api-provider").value;
+    const preset = PROVIDERS[provider];
+    if (!preset || !preset.endpoint) return;
+    document.getElementById("api-endpoint").value = preset.endpoint;
+    document.getElementById("api-model").value = preset.model;
+    settings.provider = provider;
+    settings.directEndpoint = preset.endpoint;
+    settings.model = preset.model;
+  }
+
+  async function testApiConnection() {
+    const button = document.getElementById("api-test");
+    const status = document.getElementById("api-test-status");
+    const endpoint = document.getElementById("api-endpoint").value.trim();
+    const model = document.getElementById("api-model").value.trim() || "gpt-4o-mini";
+    const key = document.getElementById("api-key").value.trim();
+
+    status.className = "api-test-status";
+    if (!endpoint) {
+      status.textContent = "请先填写 API 地址";
+      status.classList.add("error");
+      return;
+    }
+
+    button.disabled = true;
+    status.textContent = "连接中…";
+    try {
+      const reply = await R.testConnection(endpoint, key, model);
+      status.textContent = `连接成功：${reply}`;
+      status.classList.add("ok");
+    } catch (err) {
+      status.textContent = err && err.message ? err.message : String(err);
+      status.classList.add("error");
+    } finally {
+      button.disabled = false;
+    }
   }
 
   function openSettings() {
@@ -425,10 +560,12 @@
     document.querySelectorAll('input[name="mode"]').forEach((input) => {
       input.checked = input.value === settings.mode;
     });
-    document.getElementById("api-endpoint").value = settings.endpoint;
+    document.getElementById("api-provider").value = settings.provider;
+    document.getElementById("api-endpoint").value = settings.directEndpoint;
     document.getElementById("api-model").value = settings.model;
     document.getElementById("api-key").value = settings.apiKey;
-    document.getElementById("api-fields").hidden = settings.mode !== "api";
+    document.getElementById("api-proxy-endpoint").value = settings.proxyEndpoint;
+    updateSettingsVisibility();
     modal.hidden = false;
   }
 
@@ -507,11 +644,10 @@
     document.getElementById("settings-cancel").addEventListener("click", closeSettings);
     document.getElementById("settings-save").addEventListener("click", saveSettings);
     document.querySelectorAll('input[name="mode"]').forEach((input) => {
-      input.addEventListener("change", () => {
-        document.getElementById("api-fields").hidden =
-          document.querySelector('input[name="mode"]:checked').value !== "api";
-      });
+      input.addEventListener("change", updateSettingsVisibility);
     });
+    document.getElementById("api-provider").addEventListener("change", applyProviderPreset);
+    document.getElementById("api-test").addEventListener("click", testApiConnection);
 
     docEl.addEventListener("click", (event) => {
       const button = event.target.closest(".copy-code");

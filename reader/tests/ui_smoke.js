@@ -189,18 +189,46 @@ async function evalJs(send, expression) {
   await sleep(100);
   const modalVisible = await evalJs(send, "!document.getElementById('settings-modal').hidden");
   if (!modalVisible) throw new Error("settings modal did not open");
-  const apiHidden = await evalJs(
+  const apiState = await evalJs(
     send,
     `(() => {
-      const radio = document.querySelector('input[name=mode][value=api]');
-      radio.checked = true;
-      radio.dispatchEvent(new Event('change', { bubbles: true }));
-      return document.getElementById('api-fields').hidden;
+      const direct = document.querySelector('input[name=mode][value=direct]');
+      direct.checked = true;
+      direct.dispatchEvent(new Event('change', { bubbles: true }));
+      const directState = {
+        apiHidden: document.getElementById('api-fields').hidden,
+        directHidden: document.getElementById('direct-fields').hidden,
+        proxyHidden: document.getElementById('proxy-fields').hidden,
+        hasTestButton: !!document.getElementById('api-test'),
+      };
+      const proxy = document.querySelector('input[name=mode][value=proxy]');
+      proxy.checked = true;
+      proxy.dispatchEvent(new Event('change', { bubbles: true }));
+      const proxyState = {
+        apiHidden: document.getElementById('api-fields').hidden,
+        directHidden: document.getElementById('direct-fields').hidden,
+        proxyHidden: document.getElementById('proxy-fields').hidden,
+      };
+      return { directState, proxyState };
     })()`
   );
-  if (apiHidden) throw new Error("API fields did not show");
+  if (
+    apiState.directState.apiHidden ||
+    apiState.directState.directHidden ||
+    !apiState.directState.proxyHidden ||
+    !apiState.directState.hasTestButton
+  ) {
+    throw new Error("direct API fields did not show: " + JSON.stringify(apiState));
+  }
+  if (
+    apiState.proxyState.apiHidden ||
+    !apiState.proxyState.directHidden ||
+    apiState.proxyState.proxyHidden
+  ) {
+    throw new Error("proxy fields did not show: " + JSON.stringify(apiState));
+  }
   await evalJs(send, "document.getElementById('settings-cancel').click()");
-  console.log("ok   settings modal + API fields");
+  console.log("ok   settings modal + direct/proxy fields");
 
   console.log("\nall reader UI smoke tests passed");
   ws.close();
