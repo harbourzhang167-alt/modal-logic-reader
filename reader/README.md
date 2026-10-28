@@ -1,5 +1,8 @@
 # 交互讲义：模态逻辑六讲
 
+在线版：<https://harbourzhang167-alt.github.io/modal-logic-reader/>  
+源码仓库：<https://github.com/harbourzhang167-alt/modal-logic-reader>
+
 把 `course/模态逻辑六讲讲义.docx` 转成一个可交互的网页：
 
 - 左侧目录（H1–H3，可筛选、滚动高亮）；

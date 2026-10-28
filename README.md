@@ -8,7 +8,7 @@
 - 默认 **本地 RAG**（离线，BM25 检索 + 抽取式回答）
 - 可选 **API**（本地代理或 OpenAI 兼容接口）
 
-> 在线版：启用 GitHub Pages 后访问仓库根地址；根 `index.html` 会自动跳到 `reader/`。  
+> 在线版：<https://harbourzhang167-alt.github.io/modal-logic-reader/>  
 > 页面截图：[reader/screenshot-panel.png](reader/screenshot-panel.png)
 
 ## 直接使用
