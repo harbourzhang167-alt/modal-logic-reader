@@ -79,6 +79,8 @@ python reader/build_reader.py
 ```text
 .
 ├── index.html                     GitHub Pages 根入口（跳转到 reader/）
+├── LICENSE                        MIT License（代码）
+├── CONTENT-LICENSE.md             CC BY 4.0（讲义内容）
 ├── reader/
 │   ├── index.html                 阅读器
 │   ├── style.css / app.js         布局、目录、划词、面板
