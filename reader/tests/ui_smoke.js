@@ -233,6 +233,13 @@ async function waitReady(send) {
   if (!floating) throw new Error("panel did not float");
   console.log("ok   panel float");
 
+  const floatShot = await send("Page.captureScreenshot", { format: "png" });
+  fs.writeFileSync(
+    path.join(__dirname, "..", "screenshot-float.png"),
+    Buffer.from(floatShot.data, "base64")
+  );
+  console.log("ok   screenshot-float.png");
+
   // floating window resize + move
   const floatBefore = await evalJs(
     send,

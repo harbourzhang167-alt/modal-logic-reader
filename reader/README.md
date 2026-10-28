@@ -241,6 +241,7 @@ reader/
 ├── serve.py                   静态服务 + API 代理
 ├── screenshot.png             初始界面
 ├── screenshot-panel.png       划词解释面板
+├── screenshot-float.png       解释浮窗
 ├── screenshot-settings.png    内置 API 设置
 ├── screenshot-content.png     正文独立页
 └── tests/

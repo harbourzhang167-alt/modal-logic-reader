@@ -15,7 +15,7 @@
 ![内置 API 设置](reader/screenshot-settings.png)
 
 > 在线版：<https://harbourzhang167-alt.github.io/modal-logic-reader/>  
-> 页面截图：[reader/screenshot.png](reader/screenshot.png)、[reader/screenshot-panel.png](reader/screenshot-panel.png)、[reader/screenshot-content.png](reader/screenshot-content.png)
+> 页面截图：[reader/screenshot.png](reader/screenshot.png)、[reader/screenshot-panel.png](reader/screenshot-panel.png)、[reader/screenshot-float.png](reader/screenshot-float.png)、[reader/screenshot-content.png](reader/screenshot-content.png)
 
 ## 直接使用
 
