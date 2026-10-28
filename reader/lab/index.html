@@ -45,9 +45,11 @@
         </div>
         <div id="status" class="status info">公式在模型中的真值会显示在世界旁边。</div>
         <div id="eval-results" class="eval-results"></div>
+        <div id="trace" class="trace" hidden></div>
         <div class="hint">
           语法：<code>~</code> <code>&</code> <code>|</code> <code>-></code>
           <code>&lt;-&gt;</code> <code>[]</code> <code>&lt;&gt;</code>
+          <br>逐子公式 trace 跟随当前选中的世界。
         </div>
       </section>
 
@@ -72,6 +74,7 @@
         <p><b>加世界</b>：点击空白处。</p>
         <p><b>加边</b>：从一个世界拖到另一个世界。</p>
         <p><b>删除</b>：选中后按 Delete；或点“删除世界”。</p>
+        <p><b>Trace</b>：求值后显示逐子公式真值与原因，跟随当前选中的世界。</p>
         <p>“找反模型”在 ≤3 个世界中穷举；没找到不等于公式普遍有效。</p>
         <p>节点颜色反映当前公式的真值：<span class="chip true">真</span>
           <span class="chip false">假</span>。</p>

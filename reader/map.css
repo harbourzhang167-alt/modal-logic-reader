@@ -1,0 +1,181 @@
+:root {
+  --navy: #1f3864;
+  --navy-2: #2a4a7f;
+  --teal: #2e86ab;
+  --gold: #c9a227;
+  --bg: #eef2f7;
+  --paper: #fff;
+  --ink: #1f2937;
+  --muted: #667085;
+  --line: #dce3ee;
+  --shadow: 0 10px 36px rgba(31, 56, 100, 0.09);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", SimSun, Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+}
+.map-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 24px;
+  color: #fff;
+  background: linear-gradient(105deg, var(--navy), var(--navy-2));
+  box-shadow: 0 2px 14px rgba(15, 23, 42, 0.16);
+}
+.map-back {
+  color: #fff;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-family: "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.map-back:hover { background: rgba(255, 255, 255, 0.16); }
+.map-title h1 {
+  margin: 0;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+}
+.map-title p { margin: 2px 0 0; color: #c9d6ee; font-size: 11px; }
+.map-nav { margin-left: auto; display: flex; gap: 8px; font-family: "Microsoft YaHei", sans-serif; font-size: 12px; }
+.map-nav a { color: #fff; text-decoration: none; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 7px; padding: 6px 9px; }
+.map-nav a:hover { background: rgba(255, 255, 255, 0.12); }
+.map-nav a.accent { color: #f4d77a; border-color: rgba(201, 162, 39, 0.7); }
+
+.map-main { width: min(1180px, calc(100% - 32px)); margin: 24px auto 50px; }
+.map-hero {
+  background: var(--paper);
+  border: 1px solid rgba(220, 227, 238, 0.8);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 28px 32px;
+  margin-bottom: 18px;
+}
+.eyebrow { color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: 10.5px; letter-spacing: 0.14em; }
+.map-hero h2 {
+  margin: 7px 0 9px;
+  color: var(--navy);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.35;
+}
+.map-hero p { margin: 0; color: #38445a; font-size: 15.5px; line-height: 1.95; max-width: 900px; }
+.map-legend { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; font-family: "Microsoft YaHei", sans-serif; font-size: 11px; }
+.legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.legend-dot.base { background: #8ca0b8; }
+.legend-dot.sem { background: var(--teal); }
+.legend-dot.proof { background: var(--gold); }
+.legend-dot.app { background: #7b61a8; }
+.legend-dot.res { background: #2e9b64; }
+.map-item { color: var(--muted); }
+
+.map-card {
+  background: var(--paper);
+  border: 1px solid rgba(220, 227, 238, 0.8);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  overflow-x: auto;
+}
+#map-canvas { display: block; width: 100%; min-width: 850px; height: auto; }
+
+.map-node { cursor: pointer; }
+.map-node rect {
+  fill: #fbfdff;
+  stroke: #cdddec;
+  stroke-width: 1.2;
+  transition: fill 0.15s, stroke 0.15s;
+}
+.map-node:hover rect { fill: #f2f9fc; stroke: var(--teal); }
+.map-node .node-label {
+  fill: var(--navy);
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+.map-node .node-sub {
+  fill: var(--muted);
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-size: 10.5px;
+}
+.map-node.base rect { stroke: #b9c6d6; }
+.map-node.sem rect { stroke: #8fc6dd; }
+.map-node.proof rect { stroke: #e1cd8d; }
+.map-node.app rect { stroke: #c8bce0; }
+.map-node.res rect { stroke: #a9d8bd; fill: #f7fdfa; }
+.map-node.res .node-label { fill: #17663e; }
+.map-edge {
+  stroke: #a9b8ca;
+  stroke-width: 1.4;
+  fill: none;
+  marker-end: url(#map-arrow);
+}
+.map-edge.dashed { stroke-dasharray: 5 4; stroke: #b8c8b6; marker-end: url(#map-arrow-green); }
+.map-edge-label {
+  fill: #8a99ab;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 9.5px;
+}
+
+.path-section, .map-links { margin-top: 18px; }
+.path-section h2, .map-links h2 {
+  margin: 0 0 10px;
+  color: var(--navy);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 18px;
+}
+.path-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.path-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 5px 18px rgba(31, 56, 100, 0.05);
+  padding: 14px;
+}
+.path-card .step {
+  color: var(--gold);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+}
+.path-card h3 { margin: 5px 0 6px; color: var(--navy); font-family: "Microsoft YaHei", sans-serif; font-size: 14px; }
+.path-card p { margin: 0 0 8px; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.path-card a { color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: 11.5px; text-decoration: none; }
+.path-card a:hover { text-decoration: underline; }
+
+.link-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.link-card {
+  display: block;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 15px;
+  text-decoration: none;
+  box-shadow: 0 5px 18px rgba(31, 56, 100, 0.05);
+}
+.link-card:hover { border-color: #9cc9dd; }
+.link-card h3 { margin: 0 0 5px; color: var(--navy); font-family: "Microsoft YaHei", sans-serif; font-size: 14px; }
+.link-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.link-card .arrow { color: var(--teal); font-family: "Microsoft YaHei", sans-serif; font-size: 11px; }
+
+.map-footer { width: min(1180px, calc(100% - 32px)); margin: 0 auto 28px; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: 11px; line-height: 1.8; }
+
+@media (max-width: 850px) {
+  .map-topbar { flex-wrap: wrap; padding: 10px 14px; }
+  .map-nav { width: 100%; justify-content: flex-end; flex-wrap: wrap; }
+  .map-main { width: calc(100% - 20px); margin-top: 14px; }
+  .map-hero { padding: 20px; }
+  .path-grid, .link-grid { grid-template-columns: 1fr; }
+}

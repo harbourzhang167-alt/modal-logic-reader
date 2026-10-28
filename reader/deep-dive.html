@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>第二讲精读 · 从“当前为真”到“必然为真”</title>
+  <link rel="stylesheet" href="vendor/katex/katex.min.css">
   <link rel="stylesheet" href="deep-dive.css">
 </head>
 <body>
@@ -15,6 +16,7 @@
     </div>
     <nav class="dd-nav">
       <a href="lab/index.html">Kripke 实验室</a>
+      <a href="map.html">知识地图</a>
       <a href="content.html#sec-23">第二讲原文</a>
       <a class="accent" href="index.html#sec-23">回到阅读器</a>
     </nav>
@@ -131,6 +133,43 @@
       </div>
     </section>
 
+    <section class="case" id="formula-tree">
+      <div class="case-head">
+        <div class="eyebrow">公式树 · 算子辖域</div>
+        <h2>□◇p 与 ◇□p，差的不只是符号顺序</h2>
+        <p class="case-intro">
+          用 KaTeX 渲染公式，再把 AST 画成树：外层算子先作用于整个内层公式。
+          可以输入任意公式，看看它的结构。
+        </p>
+      </div>
+      <div class="ft-pair">
+        <article class="ft-card">
+          <h3>□◇p</h3>
+          <div class="ft-tex" data-tex="\Box\Diamond p"></div>
+          <div class="ft-tree" data-formula="[]<>p"></div>
+          <p>先要求每个可及世界都“可能 p”；不同后继可以有不同的 p 见证。</p>
+        </article>
+        <article class="ft-card">
+          <h3>◇□p</h3>
+          <div class="ft-tex" data-tex="\Diamond\Box p"></div>
+          <div class="ft-tree" data-formula="<>[]p"></div>
+          <p>先要求存在一个可及世界，从那里所有可及世界都满足 p；见证是同一个世界。</p>
+        </article>
+      </div>
+      <div class="ft-lab">
+        <label for="ft-input">输入公式（ASCII 语法）</label>
+        <div class="ft-input-row">
+          <input id="ft-input" type="text" value="[]<>(p -> q)" spellcheck="false">
+          <button class="btn primary" id="ft-render" type="button">生成公式树</button>
+        </div>
+        <div class="ft-custom">
+          <div class="ft-tex" id="ft-custom-tex"></div>
+          <div class="ft-tree" id="ft-custom-tree"></div>
+          <div class="ft-error" id="ft-error"></div>
+        </div>
+      </div>
+    </section>
+
     <section class="case" id="axioms">
       <div class="case-head">
         <div class="eyebrow">系统比较 · 不是背诵</div>
@@ -140,37 +179,151 @@
           哪个模型会让公理失败？
         </p>
       </div>
-      <div class="axiom-grid">
-        <article class="axiom-card">
-          <div class="axiom-top"><h3>T</h3><span class="cond">自反</span></div>
-          <div class="ax">□p → p</div>
-          <p>若 w 能看到自己，那么“所有可及世界都满足 p”就包含 w 自己，于是 p 在 w 成立。</p>
-        </article>
-        <article class="axiom-card">
-          <div class="axiom-top"><h3>4</h3><span class="cond">传递</span></div>
-          <div class="ax">□p → □□p</div>
-          <p>w 看到 v、v 看到 u 时，传递性给出 w 看到 u；于是第二层方框仍能覆盖 u。</p>
-        </article>
-        <article class="axiom-card">
-          <div class="axiom-top"><h3>5</h3><span class="cond">欧几里得</span></div>
-          <div class="ax">◇p → □◇p</div>
-          <p>若 w 看到 v 且 v 满足 p，那么从 w 出发的任意 u 也能看到 v，所以 u 也认为 ◇p。</p>
-        </article>
-        <article class="axiom-card">
-          <div class="axiom-top"><h3>B</h3><span class="cond">对称</span></div>
-          <div class="ax">p → □◇p</div>
-          <p>p 在 w 真；对任意 w 看到的 v，对称性让 v 回看 w，于是 v 认为 ◇p。</p>
-        </article>
-        <article class="axiom-card">
-          <div class="axiom-top"><h3>D</h3><span class="cond">串行</span></div>
-          <div class="ax">□p → ◇p</div>
-          <p>若每个世界至少有一个后继，□p 就不会因为“没有可及世界”而空真；它至少能找到一个 p。</p>
-        </article>
-        <article class="axiom-card">
-          <div class="axiom-top"><h3>K</h3><span class="cond">所有框架</span></div>
-          <div class="ax">□(p→q) → (□p→□q)</div>
-          <p>对所有可及世界，若 p→q 与 p 都成立，则 q 成立；方框只是把这条命题逻辑推理搬到每个后继。</p>
-        </article>
+      <div class="axiom-deep-list">
+        <details class="axiom-deep" open>
+          <summary><span class="ax-tag">T</span><span class="ax-name">□p → p</span><span class="ax-cond">自反</span></summary>
+          <div class="axiom-body">
+            <div class="axiom-part">
+              <h4>① 直觉</h4>
+              <p>“必然”如果连当前世界都不包括，就太弱了。自反性把当前世界放进可及范围，于是“所有可及世界都满足 p”必然包含“p 在现在成立”。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>② 关系条件</h4>
+              <p>对所有 w，都有 wRw。若 □p 在 w 真，因为 w 可及自身，所以 p 在 w 真。反过来，若某个 w 不自反，就能构造反模型让 □p 真而 p 假。</p>
+            </div>
+            <div class="axiom-part model-part">
+              <h4>③ 反模型</h4>
+              <div class="mini-model" data-case="T"></div>
+              <p>w0 没有自反边，p 在 w0 为假。□p 因为“没有可及世界”而空真，于是 □p→p 失败。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>④ 系统对比</h4>
+              <p>T 在 K 上加入自反性；T 的框架也自动串行，因此 D 在 T 中可导出。S4 = T+4，S5 = S4+5，B = T+B。</p>
+              <div class="sys-badges"><span>K</span><span>T</span><span>S4</span><span>S5</span><span>B</span></div>
+              <a class="mini-link" href="lab/index.html">在实验室验证 →</a>
+            </div>
+          </div>
+        </details>
+
+        <details class="axiom-deep">
+          <summary><span class="ax-tag">4</span><span class="ax-name">□p → □□p</span><span class="ax-cond">传递</span></summary>
+          <div class="axiom-body">
+            <div class="axiom-part">
+              <h4>① 直觉</h4>
+              <p>“必然”本身如果是必然的，那么从 w 看到 v、再从 v 看到 u，w 应该也能直接看到 u；这正是传递性。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>② 关系条件</h4>
+              <p>若 wRv 且 vRu，则 wRu。□p 在 w 真时，任意 wRv 的 v 都满足 p；对任意 vRu 的 u，由传递性 wRu，所以 u 也满足 p，故 □p 在 v 真，即 □□p 在 w 真。</p>
+            </div>
+            <div class="axiom-part model-part">
+              <h4>③ 反模型</h4>
+              <div class="mini-model" data-case="4"></div>
+              <p>w0→w1→w2，但缺少 w0→w2；p 在 w1 真、在 w2 假。于是 □p 在 w0 真，但 □p 在 w1 假，所以 □□p 在 w0 假。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>④ 系统对比</h4>
+              <p>4 在 K 中不成立；S4 = T+4；S5 在 S4 上再加 5。K4 只有 4，没有 T。</p>
+              <div class="sys-badges"><span>K4</span><span>S4</span><span>S5</span></div>
+              <a class="mini-link" href="lab/index.html">在实验室验证 →</a>
+            </div>
+          </div>
+        </details>
+
+        <details class="axiom-deep">
+          <summary><span class="ax-tag">5</span><span class="ax-name">◇p → □◇p</span><span class="ax-cond">欧几里得</span></summary>
+          <div class="axiom-body">
+            <div class="axiom-part">
+              <h4>① 直觉</h4>
+              <p>如果从当前世界出发，存在一条路到达 p；那么从当前世界能看到的每个世界，也应该还能看到那条 p 路。这就是“欧几里得”的收敛效果。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>② 关系条件</h4>
+              <p>若 wRv 且 wRu，则 vRu。◇p 在 w 真，取 wRv 且 p 在 v 真；对任意 wRu，欧几里得给出 vRu，所以 ◇p 在 u 真，故 □◇p 在 w 真。</p>
+            </div>
+            <div class="axiom-part model-part">
+              <h4>③ 反模型</h4>
+              <div class="mini-model" data-case="5"></div>
+              <p>w0 看到 w1、w2，但 w1 看不到 w2；p 只在 w1 真。◇p 在 w0 真，但在 w1 上 ◇p 假（w1 没有后继），所以 □◇p 在 w0 假。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>④ 系统对比</h4>
+              <p>5 在 S4 中不成立；S5 = S4+5，框架是等价关系。K5 只有 5，没有 T/4。</p>
+              <div class="sys-badges"><span>K5</span><span>S5</span><span>KD45</span></div>
+              <a class="mini-link" href="lab/index.html">在实验室验证 →</a>
+            </div>
+          </div>
+        </details>
+
+        <details class="axiom-deep">
+          <summary><span class="ax-tag">B</span><span class="ax-name">p → □◇p</span><span class="ax-cond">对称</span></summary>
+          <div class="axiom-body">
+            <div class="axiom-part">
+              <h4>① 直觉</h4>
+              <p>如果 p 现在真，那么从任何一个“可能世界”回看现在，p 都是可能的。对称性保证“回看”这条路存在。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>② 关系条件</h4>
+              <p>若 wRv，则 vRw。p 在 w 真；对任意 wRv 的 v，由对称性 vRw，所以 ◇p 在 v 真；因此 □◇p 在 w 真。</p>
+            </div>
+            <div class="axiom-part model-part">
+              <h4>③ 反模型</h4>
+              <div class="mini-model" data-case="B"></div>
+              <p>w0→w1，但 w1 看不到 w0；p 在 w0 真、在 w1 假。p 在 w0 真，但 w1 上 ◇p 假，所以 □◇p 在 w0 假。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>④ 系统对比</h4>
+              <p>B 在 S4 中不成立；B = T+B；B 与 S4 互不包含，但都在 S5 中。</p>
+              <div class="sys-badges"><span>B</span><span>T</span><span>S5</span></div>
+              <a class="mini-link" href="lab/index.html">在实验室验证 →</a>
+            </div>
+          </div>
+        </details>
+
+        <details class="axiom-deep">
+          <summary><span class="ax-tag">D</span><span class="ax-name">□p → ◇p</span><span class="ax-cond">串行</span></summary>
+          <div class="axiom-body">
+            <div class="axiom-part">
+              <h4>① 直觉</h4>
+              <p>如果每个世界至少有一个后继，“必然”就不会因为无路可走而空真；它至少能找到一个 p 的见证。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>② 关系条件</h4>
+              <p>串行：每个 w 都有 v 使 wRv。□p 在 w 真时，取这个 v，则 p 在 v 真，所以 ◇p 在 w 真。</p>
+            </div>
+            <div class="axiom-part model-part">
+              <h4>③ 反模型</h4>
+              <div class="mini-model" data-case="D"></div>
+              <p>w0 没有后继，p 在 w0 真。□p 空真，但 ◇p 假（没有可及世界），所以 □p→◇p 失败。</p>
+            </div>
+            <div class="axiom-part">
+              <h4>④ 系统对比</h4>
+              <p>D 用于道义逻辑，排除“应当但不可能”；D ⊂ T（自反一定串行），但 D 不证明 T。KD45 = D+4+5。</p>
+              <div class="sys-badges"><span>K</span><span>D</span><span>T</span><span>KD45</span></div>
+              <a class="mini-link" href="lab/index.html">在实验室验证 →</a>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="system-compare">
+        <h3>系统对比速查</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>系统</th><th>额外公理</th><th>框架条件</th><th>与其他系统的关系</th></tr></thead>
+            <tbody>
+              <tr><td>K</td><td>—</td><td>所有框架</td><td>最小正规模态逻辑</td></tr>
+              <tr><td>T</td><td>T</td><td>自反</td><td>K ⊂ T；T 可导出 D</td></tr>
+              <tr><td>K4</td><td>4</td><td>传递</td><td>K ⊂ K4 ⊂ S4</td></tr>
+              <tr><td>S4</td><td>T, 4</td><td>自反 + 传递</td><td>T ⊂ S4 ⊂ S5</td></tr>
+              <tr><td>S5</td><td>T, 4, 5</td><td>等价关系</td><td>包含 T、S4、B、D</td></tr>
+              <tr><td>D</td><td>D</td><td>串行</td><td>K ⊂ D ⊂ T</td></tr>
+              <tr><td>B</td><td>T, B</td><td>自反 + 对称</td><td>B 与 S4 互不包含，均含于 S5</td></tr>
+              <tr><td>K5</td><td>5</td><td>欧几里得</td><td>K ⊂ K5 ⊂ S5</td></tr>
+              <tr><td>KD45</td><td>D, 4, 5</td><td>串行 + 传递 + 欧几里得</td><td>知识/信念建模常用</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="axiom-note">
         <b>必然化规则（NEC）的边界：</b>从“假设 p”推出 p，不能因此得到 □p；
@@ -205,11 +358,18 @@
 
     <section class="case" id="quiz">
       <div class="case-head">
-        <div class="eyebrow">理解检查 · 即时反馈</div>
-        <h2>三道题，检查你是不是真的会算</h2>
-        <p class="case-intro">选一个答案；错误选项会告诉你具体在哪一步想岔了。</p>
+        <div class="eyebrow">理解检查 · 知识点诊断</div>
+        <h2>10 道题，按知识点诊断</h2>
+        <p class="case-intro">
+          不只看总分：每道题带知识点标签，答完后显示“语义 / 反模型 / T / 4 / 5 / B / D / 系统比较”的分项掌握情况。
+        </p>
       </div>
-      <div class="quiz-wrap" id="quiz"></div>
+      <div class="quiz-diagnostics" id="quiz-diagnostics"></div>
+      <div class="quiz-toolbar">
+        <span>选一个答案；错误选项会指出具体误解。</span>
+        <button class="btn" id="quiz-reset" type="button">重做</button>
+      </div>
+      <div class="quiz-wrap" id="quiz-list"></div>
     </section>
 
     <section class="case" id="applications">
@@ -252,6 +412,9 @@
     第二讲精读 · 配合《模态逻辑六讲》使用。公式与模型均为教学简化；反模型搜索在实验室中有界（≤3 个世界），找不到反模型不等于公式普遍有效。
   </footer>
 
+  <script src="lab/core.js"></script>
+  <script src="vendor/katex/katex.min.js"></script>
+  <script src="vendor/katex/contrib/auto-render.min.js"></script>
   <script src="deep-dive.js"></script>
 </body>
 </html>

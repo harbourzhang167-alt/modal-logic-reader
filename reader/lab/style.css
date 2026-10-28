@@ -239,6 +239,71 @@ button.danger:hover { background: #fdecec; }
 .eval-chip.true { background: var(--green-bg); color: var(--green); border-color: #bfe3cd; }
 .eval-chip.false { background: var(--red-bg); color: var(--red); border-color: #f3c4bf; }
 
+.trace {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  max-height: 390px;
+  overflow-y: auto;
+  font-family: "Microsoft YaHei", system-ui, sans-serif;
+}
+
+.trace-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.trace-head span { color: var(--muted); font-weight: 400; }
+
+.trace-node {
+  margin: 4px 0 0 8px;
+  padding-left: 9px;
+  border-left: 1px solid #dce6f0;
+}
+
+.trace-node.root { margin-left: 0; padding-left: 0; border-left: none; }
+
+.trace-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.trace-formula {
+  color: var(--navy);
+  font-family: "Cambria Math", "Times New Roman", serif;
+  font-size: 14px;
+}
+
+.trace-world {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.trace-truth {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+.trace-truth.true { color: #17663e; background: var(--green-bg); }
+.trace-truth.false { color: #9f2d27; background: var(--red-bg); }
+
+.trace-reason {
+  margin: 2px 0 4px;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.6;
+}
+
 .props {
   list-style: none;
   margin: 0;

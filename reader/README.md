@@ -10,8 +10,10 @@
 - **正文全文搜索**：搜索所有章节的正文，结果显示章节/片段，点击跳转并高亮；
 - **右侧解释栏**：宽度可拖拽；可在“停靠 / 浮窗”之间切换；浮窗可拖动、可缩放；“钉住”后点外部不关闭；
 - **正文独立页**：`reader/content.html` 按大标题分节，带每章小目录、跳章下拉和打印样式；
-- **第二讲精读**：`reader/deep-dive.html`，五步引导、可改模型、空框架反例、三道即时反馈测验；
-- **Kripke 实验室**：`reader/lab/`，拖动世界、加边、切换赋值、求值、查框架、找反模型；
+- **第二讲精读**：`reader/deep-dive.html`，五步引导、可改模型、空框架反例、T/4/5/B/D 四段精读、10 题诊断题库、KaTeX 公式树；
+- **Kripke 实验室**：`reader/lab/`，拖动世界、加边、切换赋值、求值、查框架、找反模型，并显示逐子公式 trace；
+- **知识地图**：`reader/map.html`，概念依赖、学习路径、章节与工具入口；
+- **公式渲染**：本地 vendored KaTeX（无 CDN），支持公式树与算子辖域对比；
 - 选中正文中的词/句，弹出“解释”按钮；
 - 解释模式三选一：
   - **本地 RAG**：离线，BM25 检索 + 抽取式回答，不需要 API；
@@ -49,7 +51,9 @@ python reader/serve.py --port 8010
 
 - 五步引导：自然语言问题 → 最小模型 → 逐项求值 → 改变模型 → 回到定义；
 - 空可及关系反例分三步展示：p 假 → □p 空真 → □p→p 假；
-- 三道即时反馈测验，错误选项会指出具体误解；
+- T/4/5/B/D 五条公理各有“直觉 → 关系条件 → 反模型 → 系统对比”四段，并配迷你反模型图；
+- 10 题诊断题库：按语义、反模型、证明规则、T/4/5/B/D、系统比较分项统计；
+- KaTeX 公式树：对比 □◇p 与 ◇□p，支持输入任意 ASCII 公式生成 AST 树；
 - 可跳转到 Kripke 实验室亲手改模型。
 
 ### Kripke 实验室
@@ -59,8 +63,17 @@ python reader/serve.py --port 8010
 - 点击世界选中/拖动，点击空白加世界，拖拽加边；
 - 切换各世界的原子命题真值；
 - 输入公式求值，查看每个子公式；
+- 逐子公式 trace：显示每个子公式的世界、真值和原因，跟随当前选中世界；
 - 检查框架性质；
 - 在 ≤3 个世界中搜索反模型。
+
+### 知识地图
+
+打开 `reader/map.html`，或侧栏底部“知识地图”：
+
+- 以 SVG 展示“命题逻辑 → 模态语言 → Kripke 语义 → 公理/框架/完全性 → 表列法/应用”的依赖；
+- 节点直接链接到对应章节、精读、题库、公式树和实验室；
+- 给出四条学习路径与实践入口。
 
 ### 使用内置 API（不需要 Python）
 
@@ -202,11 +215,14 @@ node reader/tests/ui_smoke.js
 # 正文独立页：9 章、每章小目录、锚点、跳章
 node reader/tests/ui_content_page.js
 
-# 第二讲精读：五步、模型切换、空框架 stepper、测验反馈
+# 第二讲精读：五步、模型切换、空框架 stepper、10 题诊断、KaTeX 公式树
 node reader/tests/ui_deep_dive.js
 
-# Kripke 实验室：反模型、求值、框架性质、加世界
+# Kripke 实验室：反模型、求值、逐子公式 trace、框架性质、加世界
 node reader/tests/ui_lab_smoke.js
+
+# 知识地图：14 个节点、17 条边、学习路径与工具链接
+node reader/tests/ui_map.js
 ```
 
 API 模式可以用 mock 服务验证，不需要真实 Key。
@@ -259,10 +275,12 @@ reader/
 ├── content.js                 按 H1 分章的 HTML（生成）
 ├── content.html               正文独立页（生成）
 ├── content-page.css           正文独立页样式
-├── deep-dive.html             第二讲精读（五步 + 反例 + 测验）
+├── deep-dive.html             第二讲精读（五步 + 公理 + 测验 + 公式树）
 ├── deep-dive.css              精读页样式
 ├── deep-dive.js               精读页交互
-├── lab/                       Kripke 实验室（模型编辑器）
+├── lab/                       Kripke 实验室（模型编辑器 + trace）
+├── map.html / map.css / map.js  知识地图
+├── vendor/katex/              本地 KaTeX（含字体与 MIT LICENSE）
 ├── rag.js                     RAG 块（生成）
 ├── rag/
 │   ├── modal-logic-rag.jsonl  标准 RAG 文档
@@ -276,6 +294,9 @@ reader/
 ├── screenshot-settings.png    内置 API 设置
 ├── screenshot-content.png     正文独立页
 ├── screenshot-deep-dive.png   第二讲精读
+├── screenshot-formula-tree.png 公式树
+├── screenshot-map.png         知识地图
+├── screenshot-lab-trace.png   实验室逐子公式 trace
 └── tests/
     ├── test_rag.js
     ├── ui_smoke.js
@@ -284,6 +305,7 @@ reader/
     ├── ui_content_page.js
     ├── ui_deep_dive.js
     ├── ui_lab_smoke.js
+    ├── ui_map.js
     └── mock_api.py
 ```
 
@@ -294,7 +316,8 @@ reader/
 - 实验室的反模型搜索在 ≤3 个世界中穷举；“没找到”不等于公式普遍有效。
 - 内置 API 的质量取决于模型和 Prompt，且受服务商 CORS 策略影响；浏览器直连失败时请改用代理。
 - 没有账号、没有云端存储；所有模型选择/端点保存在浏览器 localStorage，API Key 在 sessionStorage 或服务端环境变量。
-- 没有公式排版引擎（KaTeX/MathJax）；公式以 Unicode 文本呈现，和 DOCX 一致。
+- 正文仍以 Unicode 公式为主；精读页的公式树和示例使用本地 vendored KaTeX（MIT），不依赖 CDN。
+- 知识地图是学习建议，不是形式化依赖证明。
 - 正文搜索是子串匹配 + RAG 块排序，不是语义搜索；可以后续换成 embedding。
 - DOCX 更新后需要重新运行 `build_reader.py`，并提交生成文件。
 

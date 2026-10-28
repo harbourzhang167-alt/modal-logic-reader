@@ -142,7 +142,32 @@ async function evalJs(send, expression) {
   await sleep(150);
   const chips = await evalJs(send, 'document.querySelectorAll(".eval-chip").length');
   if (chips < 1) throw new Error("expected evaluation chips");
-  console.log("ok   evaluation chips:", chips);
+  const traceState = await evalJs(send, `({
+    visible: !document.getElementById('trace').hidden,
+    nodes: document.querySelectorAll('#trace .trace-node').length,
+    text: document.getElementById('trace').textContent
+  })`);
+  if (!traceState.visible || traceState.nodes < 2 || !traceState.text.includes("逐子公式")) {
+    throw new Error("trace panel failed: " + JSON.stringify(traceState));
+  }
+  console.log("ok   evaluation chips:", chips, "| trace nodes:", traceState.nodes);
+
+  // select w1 and confirm trace switches world
+  await evalJs(send, `(() => {
+    const node = [...document.querySelectorAll('.node')].find((n) => n.textContent.includes('w1'));
+    if (node) node.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 0, clientY: 0, pointerId: 7 }));
+  })()`);
+  await sleep(100);
+  const traceHead = await evalJs(send, "document.querySelector('#trace .trace-head').textContent");
+  if (!traceHead.includes("w1")) throw new Error("trace did not follow selected world: " + traceHead);
+  console.log("ok   trace follows selected world:", traceHead.trim());
+
+  const traceShot = await send("Page.captureScreenshot", { format: "png" });
+  require("fs").writeFileSync(
+    path.join(__dirname, "..", "screenshot-lab-trace.png"),
+    Buffer.from(traceShot.data, "base64")
+  );
+  console.log("ok   screenshot-lab-trace.png");
 
   // 5. frame properties rendered
   const props = await evalJs(send, 'document.querySelectorAll("#props .prop").length');

@@ -353,6 +353,115 @@ body {
 .counter-dot.on { background: var(--gold); }
 .counter-controls { display: flex; gap: 8px; margin-top: 12px; }
 
+.ft-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.ft-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcfe;
+  padding: 14px 15px;
+}
+.ft-card h3 {
+  margin: 0 0 6px;
+  color: var(--navy);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+}
+.ft-tex {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  color: var(--navy);
+  font-size: 1.25em;
+}
+.ft-tree {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 90px;
+  padding: 9px 4px;
+  overflow-x: auto;
+  border-top: 1px dashed #dbe5ef;
+  border-bottom: 1px dashed #dbe5ef;
+  margin: 5px 0 8px;
+}
+.ft-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 0 5px;
+}
+.ft-op {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  min-height: 27px;
+  padding: 2px 7px;
+  border: 1px solid #cdddec;
+  border-radius: 6px;
+  background: #fff;
+  color: var(--navy);
+  font-family: "Cambria Math", "STIX Two Math", serif;
+  font-size: 14px;
+}
+.ft-op.atom { border-color: #e3d6ab; background: #fffaf0; color: #70590f; }
+.ft-op .katex { font-size: 1.05em; }
+.ft-children {
+  display: flex;
+  gap: 9px;
+  padding-top: 7px;
+  border-top: 1px solid #cbd7e5;
+}
+.ft-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.ft-lab {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px 15px;
+}
+.ft-lab label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--navy);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+}
+.ft-input-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.ft-input-row input {
+  flex: 1 1 220px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 9px;
+  outline: none;
+  font-family: "Consolas", "Cascadia Mono", monospace;
+  font-size: 12px;
+}
+.ft-input-row input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(46, 134, 171, 0.1); }
+.ft-custom {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr);
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
+.ft-custom .ft-tree { border: 1px dashed #dbe5ef; border-radius: 8px; margin: 0; }
+.ft-error {
+  grid-column: 1 / -1;
+  color: #9f2d27;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 11.5px;
+}
+
 .axiom-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -405,6 +514,152 @@ body {
   line-height: 1.8;
 }
 
+.axiom-deep-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+.axiom-deep {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcfe;
+  overflow: hidden;
+}
+.axiom-deep summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  background: #f7fafd;
+}
+.axiom-deep summary::-webkit-details-marker { display: none; }
+.axiom-deep summary::after {
+  content: "展开";
+  margin-left: 4px;
+  color: var(--muted);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+}
+.axiom-deep[open] summary::after { content: "收起"; }
+.ax-tag {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 6px;
+  background: var(--navy);
+  color: #fff;
+  font-family: "Cambria Math", "Times New Roman", serif;
+  font-size: 15px;
+}
+.ax-name {
+  color: var(--navy);
+  font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+  font-size: 18px;
+}
+.ax-cond {
+  margin-left: auto;
+  color: var(--teal);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 11px;
+}
+.axiom-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 15px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+}
+.axiom-part {
+  min-width: 0;
+  border: 1px solid #edf1f6;
+  border-radius: 9px;
+  padding: 11px 12px;
+  background: #fcfdff;
+}
+.axiom-part h4 {
+  margin: 0 0 5px;
+  color: var(--navy);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+}
+.axiom-part p {
+  margin: 0;
+  color: #46546a;
+  font-size: 12.5px;
+  line-height: 1.75;
+}
+.axiom-part .mini-link {
+  display: inline-block;
+  margin-top: 7px;
+  color: var(--teal);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 11px;
+  text-decoration: none;
+}
+.axiom-part .mini-link:hover { text-decoration: underline; }
+.model-part { background: #fbfdff; }
+.mini-model {
+  margin-bottom: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(220, 227, 238, 0.28) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(220, 227, 238, 0.28) 1px, transparent 1px),
+    #fbfdff;
+  background-size: 18px 18px;
+  padding: 4px;
+}
+.mini-model svg { display: block; width: 100%; height: auto; }
+.sys-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.sys-badges span {
+  border: 1px solid #d7e6f2;
+  background: #eef5fb;
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 10px;
+}
+
+.system-compare { margin-top: 20px; }
+.system-compare h3 {
+  margin: 0 0 9px;
+  color: var(--navy);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+}
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+}
+.system-compare table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.system-compare th,
+.system-compare td {
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 7px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.system-compare th:last-child,
+.system-compare td:last-child { border-right: none; }
+.system-compare tr:last-child td { border-bottom: none; }
+.system-compare th { background: #eef5fb; color: var(--navy); white-space: nowrap; }
+
 .mistake-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -422,6 +677,44 @@ body {
 .mistake p { margin: 0; color: #5f5545; font-size: 12.5px; line-height: 1.7; }
 
 .quiz-wrap { margin-top: 14px; }
+.quiz-diagnostics {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcfe;
+  padding: 13px 15px;
+  font-family: "Microsoft YaHei", sans-serif;
+}
+.diag-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.diag-head b { color: var(--navy); font-size: 13px; }
+.diag-head span { color: var(--muted); font-size: 11px; }
+.diag-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.diag-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: var(--muted);
+  background: #fff;
+  font-size: 10.5px;
+}
+.diag-chip.good { border-color: #bfe3cd; background: #eefaf3; color: #17663e; }
+.diag-chip.partial { border-color: #e6d39a; background: #fff9e8; color: #765f12; }
+.diag-chip.empty { opacity: 0.6; }
+.quiz-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 11.5px;
+}
 .quiz-item {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -430,6 +723,18 @@ body {
   margin-bottom: 11px;
 }
 .quiz-q { margin: 0 0 10px; color: var(--navy); font-size: 14.5px; line-height: 1.8; }
+.quiz-tag {
+  display: inline-block;
+  margin-right: 6px;
+  border: 1px solid #d7e6f2;
+  background: #eef5fb;
+  color: var(--teal);
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-family: "Microsoft YaHei", sans-serif;
+  font-size: 9.5px;
+  vertical-align: 2px;
+}
 .quiz-options { display: flex; flex-direction: column; gap: 6px; }
 .quiz-option {
   text-align: left;
@@ -524,5 +829,7 @@ body {
   .step-tabs { flex-direction: row; overflow-x: auto; }
   .step-tab { flex: 0 0 auto; }
   .axiom-grid, .app-grid, .mistake-list { grid-template-columns: 1fr; }
+  .axiom-body { grid-template-columns: 1fr; }
+  .ft-pair, .ft-custom { grid-template-columns: 1fr; }
   .cta { flex-direction: column; align-items: flex-start; }
 }

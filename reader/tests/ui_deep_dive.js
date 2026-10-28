@@ -70,7 +70,10 @@ async function evalJs(send, expression) {
   await send("Runtime.enable");
 
   for (let i = 0; i < 60; i++) {
-    if ((await evalJs(send, "document.querySelectorAll('.step-tab').length")) >= 5) break;
+    const ready =
+      (await evalJs(send, "document.querySelectorAll('.quiz-item').length")) >= 10 &&
+      (await evalJs(send, "document.querySelectorAll('#model-canvas circle').length")) >= 3;
+    if (ready) break;
     await sleep(100);
   }
 
@@ -84,10 +87,39 @@ async function evalJs(send, expression) {
       hasLab: !!document.querySelector('a[href="lab/index.html"]')
     })`
   );
-  if (structure.steps !== 5 || structure.worlds !== 3 || structure.verdicts !== 4 || structure.quizzes !== 3 || !structure.hasLab) {
+  if (structure.steps !== 5 || structure.worlds !== 3 || structure.verdicts !== 4 || structure.quizzes !== 10 || !structure.hasLab) {
     throw new Error("deep-dive structure failed: " + JSON.stringify(structure));
   }
   console.log("ok   deep-dive structure:", structure.steps, "steps,", structure.quizzes, "quizzes");
+
+  const formulaTree = await evalJs(
+    send,
+    `({
+      cards: document.querySelectorAll('#formula-tree .ft-card').length,
+      nodes: document.querySelectorAll('#formula-tree .ft-tree .ft-node').length,
+      katex: !!document.querySelector('#formula-tree .katex')
+    })`
+  );
+  if (formulaTree.cards !== 2 || formulaTree.nodes < 5 || !formulaTree.katex) {
+    throw new Error("formula tree failed: " + JSON.stringify(formulaTree));
+  }
+  await evalJs(send, `(() => {
+    const input = document.getElementById('ft-input');
+    input.value = '[]p';
+    document.getElementById('ft-render').click();
+  })()`);
+  const customTree = await evalJs(send, "document.querySelectorAll('#ft-custom-tree .ft-node').length");
+  if (customTree !== 2) throw new Error("custom formula tree failed: " + customTree);
+  console.log("ok   formula tree:", formulaTree.nodes, "nodes; custom:", customTree);
+
+  await evalJs(send, "document.getElementById('formula-tree').scrollIntoView({block: 'start'})");
+  await sleep(250);
+  const treeShot = await send("Page.captureScreenshot", { format: "png" });
+  require("fs").writeFileSync(
+    path.join(__dirname, "..", "screenshot-formula-tree.png"),
+    Buffer.from(treeShot.data, "base64")
+  );
+  console.log("ok   screenshot-formula-tree.png");
 
   await evalJs(send, "document.querySelectorAll('.step-tab')[4].click()");
   const stepText = await evalJs(send, "document.getElementById('step-panel').textContent");
@@ -133,7 +165,10 @@ async function evalJs(send, expression) {
     send,
     `(() => {
       const cards = [...document.querySelectorAll('.quiz-item')];
-      cards.forEach((card) => card.querySelectorAll('.quiz-option')[1].click());
+      cards.forEach((card) => {
+        const correct = Number(card.dataset.correct);
+        card.querySelectorAll('.quiz-option')[correct].click();
+      });
       return [...document.querySelectorAll('.quiz-item')].map((card) => ({
         ok: card.querySelector('.quiz-feedback').classList.contains('ok'),
         text: card.querySelector('.quiz-feedback').textContent
@@ -143,7 +178,12 @@ async function evalJs(send, expression) {
   if (!quizResult.every((x) => x.ok && x.text.length > 5)) {
     throw new Error("quiz feedback failed: " + JSON.stringify(quizResult));
   }
-  console.log("ok   quiz feedback: 3 correct answers");
+  const diag = await evalJs(send, "document.getElementById('quiz-diagnostics').textContent");
+  if (!diag.includes("知识点诊断") || !diag.includes("10/10")) {
+    throw new Error("quiz diagnostics failed: " + diag);
+  }
+  console.log("ok   quiz feedback: 10 correct answers");
+  console.log("ok   diagnostics:", diag.replace(/\s+/g, " ").trim().slice(0, 100));
 
   console.log("\ndeep-dive tests passed");
   ws.close();

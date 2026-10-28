@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>模态逻辑知识地图 · 模态逻辑六讲</title>
+  <link rel="stylesheet" href="map.css">
+</head>
+<body>
+  <header class="map-topbar">
+    <a class="map-back" href="index.html">← 返回讲义</a>
+    <div class="map-title">
+      <h1>模态逻辑知识地图</h1>
+      <p>概念依赖 · 学习路径 · 对应章节与工具</p>
+    </div>
+    <nav class="map-nav">
+      <a href="deep-dive.html">第二讲精读</a>
+      <a href="lab/index.html">Kripke 实验室</a>
+      <a class="accent" href="content.html">正文独立页</a>
+    </nav>
+  </header>
+
+  <main class="map-main">
+    <section class="map-hero">
+      <div class="eyebrow">KNOWLEDGE MAP · 不是线性目录</div>
+      <h2>从“会读公式”到“会选系统”</h2>
+      <p>
+        这张图不是章节列表，而是概念之间的依赖：先有命题逻辑和模态语言，
+        才能谈 Kripke 语义；有了语义，才能理解反模型、公理对应和完全性；
+        最后才是表列法与应用系统选择。绿色节点是可以直接动手的工具。
+      </p>
+      <div class="map-legend">
+        <span class="map-item"><i class="legend-dot base"></i>基础</span>
+        <span class="map-item"><i class="legend-dot sem"></i>语义</span>
+        <span class="map-item"><i class="legend-dot proof"></i>证明论</span>
+        <span class="map-item"><i class="legend-dot app"></i>应用</span>
+        <span class="map-item"><i class="legend-dot res"></i>互动资源</span>
+        <span class="map-item">实线 = 主要依赖；虚线 = 工具/练习</span>
+      </div>
+    </section>
+
+    <section class="map-card">
+      <svg id="map-canvas" viewBox="0 0 1040 620" role="img"
+           aria-label="模态逻辑知识依赖图：从命题逻辑到应用与工具"></svg>
+    </section>
+
+    <section class="path-section">
+      <h2>建议学习路径</h2>
+      <div class="path-grid">
+        <article class="path-card">
+          <div class="step">PATH 01 · 语义直觉</div>
+          <h3>先会算，再记定义</h3>
+          <p>从“当前真 vs 必然真”开始，用三世界模型和空框架反例建立直觉。</p>
+          <a href="deep-dive.html">进入第二讲精读 →</a>
+        </article>
+        <article class="path-card">
+          <div class="step">PATH 02 · 公理系统</div>
+          <h3>每条公理都要有反模型</h3>
+          <p>T/4/5/B/D 逐个看“直觉 → 关系条件 → 反模型 → 系统对比”。</p>
+          <a href="deep-dive.html#axioms">跳到公理精读 →</a>
+        </article>
+        <article class="path-card">
+          <div class="step">PATH 03 · 证明与完全性</div>
+          <h3>从证明搜索到典范模型</h3>
+          <p>表列法把“找证明”变成“构造反模型”；完全性说明有效与可证的匹配。</p>
+          <a href="index.html#sec-46">读第四讲 →</a>
+        </article>
+        <article class="path-card">
+          <div class="step">PATH 04 · 应用</div>
+          <h3>先问假设，再选系统</h3>
+          <p>知识用 S5、信念用 KD45、义务用 D；先明确关系条件，再谈结论。</p>
+          <a href="index.html#sec-72">读第六讲 →</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="map-links">
+      <h2>动手与自测</h2>
+      <div class="link-grid">
+        <a class="link-card" href="lab/index.html">
+          <h3>Kripke 实验室</h3>
+          <p>拖世界、加边、改赋值、求值、查框架、在 ≤3 个世界中找反模型；右侧有逐子公式 trace。</p>
+          <span class="arrow">打开实验室 →</span>
+        </a>
+        <a class="link-card" href="deep-dive.html#quiz">
+          <h3>诊断题库</h3>
+          <p>10 道题，按语义、反模型、T/4/5/B/D、系统比较分项诊断，而不只是给总分。</p>
+          <span class="arrow">开始自测 →</span>
+        </a>
+        <a class="link-card" href="deep-dive.html#formula-tree">
+          <h3>公式树 + KaTeX</h3>
+          <p>看 □◇p 与 ◇□p 的辖域差异，输入任意公式生成 AST 树。</p>
+          <span class="arrow">打开公式树 →</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="map-footer">
+    知识地图是学习建议，不是形式化依赖证明；不同教材的编排顺序可能不同。
+    章节链接使用阅读器的 hash 路由，工具链接会在新页面打开。
+  </footer>
+
+  <script src="map.js"></script>
+</body>
+</html>

@@ -397,6 +397,7 @@
 
   const questions = [
     {
+      tag: "语义",
       q: "设 w0 可及 w1、w2；p 在 w1 真、在 w2 假。下面哪一项正确？",
       options: [
         "□p 与 ◇p 都为真",
@@ -413,6 +414,7 @@
       ],
     },
     {
+      tag: "证明规则",
       q: "从假设 p 推出 p，能否因此直接得到 □p？",
       options: [
         "能，NEC 对任何推导都适用",
@@ -429,6 +431,7 @@
       ],
     },
     {
+      tag: "反模型",
       q: "设 W={w0}，R=∅，p 在 w0 为假。下面哪一项正确？",
       options: [
         "□p 假，因为 w0 不满足 p",
@@ -444,15 +447,142 @@
         "前件真、后件假，蕴涵不可能是真。",
       ],
     },
+    {
+      tag: "T",
+      q: "下列哪个模型能让 □p→p 在 K 中失败？",
+      options: [
+        "w0 有自反边，p 在 w0 假",
+        "w0 没有可及世界，p 在 w0 假",
+        "w0→w1，p 在 w0、w1 都真",
+        "w0→w1，p 在 w0 假、w1 假",
+      ],
+      correct: 1,
+      feedback: [
+        "自反边让 w0 也进入 □p 的检查范围；p 假则 □p 假，蕴涵不为假。",
+        "对：空可及关系让 □p 空真，而 p 假，于是蕴涵失败。",
+        "□p 真、p 真，T 成立。",
+        "w1 也假，□p 为假，蕴涵真；这不是 T 的反例。",
+      ],
+    },
+    {
+      tag: "4",
+      q: "w0→w1→w2，缺少 w0→w2；p 在 w0、w1 真，在 w2 假。在 w0 上哪个公理失败？",
+      options: ["T", "4", "D", "B"],
+      correct: 1,
+      feedback: [
+        "T 在 w0 成立：□p 真（w0 只看 w1，w1 满足 p），且 p 在 w0 真。",
+        "对：□p 在 w0 真，但 w1 上 □p 假（w1 看到 w2），所以 □□p 在 w0 假。",
+        "D 在 w0 成立：w0 有后继，□p 真时也能找到 p。",
+        "B 不是这里的关键；失败的是传递性对应的 4。",
+      ],
+    },
+    {
+      tag: "5",
+      q: "w0 看到 w1、w2，但 w1 看不到 w2；p 只在 w1 真。在 w0 上哪个公理失败？",
+      options: ["4", "5", "T", "D"],
+      correct: 1,
+      feedback: [
+        "4 不要求 w0 的后继之间互相可及；这里的关键是 5。",
+        "对：◇p 在 w0 真（看到 w1），但 w1 上 ◇p 假，所以 □◇p 在 w0 假。",
+        "T 在 w0 成立：□p 为假，蕴涵真。",
+        "D 在 w0 成立：w0 有后继。",
+      ],
+    },
+    {
+      tag: "B",
+      q: "w0→w1，但 w1 看不到 w0；p 在 w0 真、在 w1 假。在 w0 上哪个公理失败？",
+      options: ["T", "4", "B", "D"],
+      correct: 2,
+      feedback: [
+        "T 不要求反向边；p 在 w0 真。",
+        "4 不涉及反向边。",
+        "对：p 在 w0 真，但 w1 上 ◇p 假，所以 □◇p 在 w0 假；关系不对称。",
+        "D 只要求每个世界有后继；w0 有后继。",
+      ],
+    },
+    {
+      tag: "D",
+      q: "W={w0}，R=∅，p 在 w0 真。哪个公理失败？",
+      options: ["T", "D", "K", "4"],
+      correct: 1,
+      feedback: [
+        "T 成立：□p 空真，p 在 w0 真。",
+        "对：□p 空真，但 ◇p 假（没有可及世界），所以 □p→◇p 失败。",
+        "K 在空关系下仍有效。",
+        "4 在空关系下也成立。",
+      ],
+    },
+    {
+      tag: "系统比较",
+      q: "下列系统包含关系哪项正确？",
+      options: ["K ⊂ S4 ⊂ T", "K ⊂ T ⊂ S4 ⊂ S5", "S5 ⊂ S4", "T ⊂ K"],
+      correct: 1,
+      feedback: [
+        "S4 比 T 强，不是 T 包含 S4。",
+        "对：K 最弱；T 加自反；S4 再加传递；S5 再加欧几里得。",
+        "S5 比 S4 强，方向反了。",
+        "T 比 K 强，K 不包含 T。",
+      ],
+    },
+    {
+      tag: "系统比较",
+      q: "S5 对应的框架条件是什么？",
+      options: ["串行", "自反", "等价关系", "传递"],
+      correct: 2,
+      feedback: [
+        "串行是 D 的条件。",
+        "自反只是 T 的条件；S5 还要求传递和欧几里得。",
+        "对：S5 的 R 是自反、传递、对称（等价）关系。",
+        "传递只是 4 的条件，不充分。",
+      ],
+    },
   ];
 
+  const answers = new Map();
+
+  function renderDiagnostics() {
+    const box = $("quiz-diagnostics");
+    const tags = [...new Set(questions.map((q) => q.tag))];
+    let answered = 0;
+    let correct = 0;
+    for (const value of answers.values()) {
+      answered += 1;
+      if (value) correct += 1;
+    }
+
+    const chips = tags
+      .map((tag) => {
+        const items = questions
+          .map((q, i) => ({ q, i }))
+          .filter(({ q }) => q.tag === tag);
+        let done = 0;
+        let ok = 0;
+        for (const { i } of items) {
+          if (answers.has(i)) {
+            done += 1;
+            if (answers.get(i)) ok += 1;
+          }
+        }
+        const cls = done === 0 ? "empty" : ok === done ? "good" : ok > 0 ? "partial" : "";
+        const text = done === 0 ? "未答" : `${ok}/${done}`;
+        return `<span class="diag-chip ${cls}">${tag} · ${text}</span>`;
+      })
+      .join("");
+
+    box.innerHTML =
+      `<div class="diag-head"><b>知识点诊断</b><span>已答 ${answered}/${questions.length} · 正确 ${correct}</span></div>` +
+      `<div class="diag-grid">${chips}</div>`;
+  }
+
   function renderQuiz() {
-    const wrap = $("quiz");
+    const wrap = $("quiz-list");
     wrap.innerHTML = "";
     questions.forEach((item, qi) => {
       const card = document.createElement("div");
       card.className = "quiz-item";
-      card.innerHTML = `<p class="quiz-q"><b>Q${qi + 1}.</b> ${item.q}</p>`;
+      card.dataset.tag = item.tag;
+      card.dataset.correct = String(item.correct);
+      card.innerHTML = `<p class="quiz-q"><span class="quiz-tag">${item.tag}</span><b>Q${qi + 1}.</b> ${item.q}</p>`;
       const options = document.createElement("div");
       options.className = "quiz-options";
       const feedback = document.createElement("div");
@@ -467,7 +597,9 @@
           options.querySelectorAll(".quiz-option").forEach((b) => {
             b.classList.remove("correct", "wrong");
           });
-          if (oi === item.correct) {
+          const isCorrect = oi === item.correct;
+          answers.set(qi, isCorrect);
+          if (isCorrect) {
             button.classList.add("correct");
             feedback.className = "quiz-feedback show ok";
             feedback.textContent = `答对了。${item.feedback[oi]}`;
@@ -477,6 +609,7 @@
             feedback.className = "quiz-feedback show bad";
             feedback.textContent = `再想想：${item.feedback[oi]}`;
           }
+          renderDiagnostics();
         });
         options.appendChild(button);
       });
@@ -485,7 +618,226 @@
       card.appendChild(feedback);
       wrap.appendChild(card);
     });
+    renderDiagnostics();
   }
+
+  $("quiz-reset").addEventListener("click", () => {
+    answers.clear();
+    renderQuiz();
+  });
+
+  // ------------------------------------------------- formula tree + KaTeX
+
+  const Core = globalThis.ModalCore;
+  const katex = globalThis.katex;
+
+  function renderTex(el, tex) {
+    if (!el) return;
+    if (katex) {
+      katex.render(tex, el, { throwOnError: false, displayMode: false });
+    } else {
+      el.textContent = tex;
+    }
+  }
+
+  function toLatex(ast) {
+    switch (ast.t) {
+      case "atom":
+        return ast.name;
+      case "not":
+        return "\\neg " + toLatex(ast.a);
+      case "box":
+        return "\\Box " + toLatex(ast.a);
+      case "dia":
+        return "\\Diamond " + toLatex(ast.a);
+      case "and":
+        return `(${toLatex(ast.a)} \\land ${toLatex(ast.b)})`;
+      case "or":
+        return `(${toLatex(ast.a)} \\lor ${toLatex(ast.b)})`;
+      case "imp":
+        return `(${toLatex(ast.a)} \\to ${toLatex(ast.b)})`;
+      case "iff":
+        return `(${toLatex(ast.a)} \\leftrightarrow ${toLatex(ast.b)})`;
+      default:
+        return "?";
+    }
+  }
+
+  const OP_LATEX = {
+    not: "\\neg",
+    box: "\\Box",
+    dia: "\\Diamond",
+    and: "\\land",
+    or: "\\lor",
+    imp: "\\to",
+    iff: "\\leftrightarrow",
+  };
+
+  function buildTreeNode(ast) {
+    const wrap = document.createElement("div");
+    wrap.className = "ft-node";
+
+    const op = document.createElement("span");
+    op.className = "ft-op";
+    if (ast.t === "atom") {
+      op.classList.add("atom");
+      op.textContent = ast.name;
+    } else {
+      renderTex(op, OP_LATEX[ast.t] || "?");
+    }
+    wrap.appendChild(op);
+
+    const children = [];
+    if (ast.a) children.push(ast.a);
+    if (ast.b) children.push(ast.b);
+    if (children.length) {
+      const box = document.createElement("div");
+      box.className = "ft-children";
+      for (const child of children) box.appendChild(buildTreeNode(child));
+      wrap.appendChild(box);
+    }
+    return wrap;
+  }
+
+  function drawFormulaTree(container, ast) {
+    container.innerHTML = "";
+    container.appendChild(buildTreeNode(ast));
+  }
+
+  function renderStaticFormulaTree() {
+    if (!Core) return;
+    document.querySelectorAll("[data-tex]").forEach((el) => {
+      renderTex(el, el.dataset.tex);
+    });
+    document.querySelectorAll(".ft-tree[data-formula]").forEach((container) => {
+      try {
+        drawFormulaTree(container, Core.parse(container.dataset.formula));
+      } catch (err) {
+        container.textContent = "公式解析失败";
+      }
+    });
+  }
+
+  function renderCustomFormulaTree() {
+    const input = $("ft-input");
+    const texBox = $("ft-custom-tex");
+    const treeBox = $("ft-custom-tree");
+    const errorBox = $("ft-error");
+    if (!input || !Core) return;
+    errorBox.textContent = "";
+    try {
+      const ast = Core.parse(input.value);
+      renderTex(texBox, toLatex(ast));
+      drawFormulaTree(treeBox, ast);
+    } catch (err) {
+      texBox.innerHTML = "";
+      treeBox.innerHTML = "";
+      errorBox.textContent = `解析失败：${err.message}`;
+    }
+  }
+
+  if ($("ft-render")) {
+    $("ft-render").addEventListener("click", renderCustomFormulaTree);
+    $("ft-input").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") renderCustomFormulaTree();
+    });
+    renderStaticFormulaTree();
+    renderCustomFormulaTree();
+  }
+
+  // ---------------------------------------------- axiom counter-models
+
+  const miniCases = {
+    T: {
+      p: { w0: false },
+      edges: [],
+      pos: { w0: { x: 140, y: 78 } },
+    },
+    "4": {
+      p: { w0: false, w1: true, w2: false },
+      edges: [["w0", "w1"], ["w1", "w2"]],
+      pos: { w0: { x: 50, y: 82 }, w1: { x: 140, y: 42 }, w2: { x: 230, y: 82 } },
+    },
+    "5": {
+      p: { w0: false, w1: true, w2: false },
+      edges: [["w0", "w1"], ["w0", "w2"]],
+      pos: { w0: { x: 50, y: 82 }, w1: { x: 140, y: 42 }, w2: { x: 230, y: 82 } },
+    },
+    B: {
+      p: { w0: true, w1: false },
+      edges: [["w0", "w1"]],
+      pos: { w0: { x: 85, y: 80 }, w1: { x: 195, y: 80 } },
+    },
+    D: {
+      p: { w0: true },
+      edges: [],
+      pos: { w0: { x: 140, y: 78 } },
+    },
+  };
+
+  function drawMiniModel(container, spec, key) {
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 280 150");
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", `${key} 的反模型`);
+    addDefs(svg, `mini-arrow-${key}`);
+
+    for (const [a, b] of spec.edges) {
+      const from = spec.pos[a];
+      const to = spec.pos[b];
+      const start = circleEdgePoint(from, to, 18);
+      const end = circleEdgePoint(to, from, 18);
+      const line = document.createElementNS(NS, "line");
+      line.setAttribute("x1", start.x);
+      line.setAttribute("y1", start.y);
+      line.setAttribute("x2", end.x);
+      line.setAttribute("y2", end.y);
+      line.setAttribute("stroke", "#6b7f99");
+      line.setAttribute("stroke-width", "1.8");
+      line.setAttribute("marker-end", `url(#mini-arrow-${key})`);
+      svg.appendChild(line);
+    }
+
+    for (const [id, pos] of Object.entries(spec.pos)) {
+      const group = document.createElementNS(NS, "g");
+      const circle = document.createElementNS(NS, "circle");
+      circle.setAttribute("cx", pos.x);
+      circle.setAttribute("cy", pos.y);
+      circle.setAttribute("r", "18");
+      circle.setAttribute("fill", spec.p[id] ? "#e5f7ee" : "#ffffff");
+      circle.setAttribute("stroke", spec.p[id] ? "#2e9b64" : "#8ca0b8");
+      circle.setAttribute("stroke-width", "1.8");
+      group.appendChild(circle);
+
+      const label = document.createElementNS(NS, "text");
+      label.setAttribute("x", pos.x);
+      label.setAttribute("y", pos.y + 4);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("font-family", "Microsoft YaHei, sans-serif");
+      label.setAttribute("font-size", "10");
+      label.setAttribute("font-weight", "700");
+      label.setAttribute("fill", "#1f3864");
+      label.textContent = id;
+      group.appendChild(label);
+
+      const p = document.createElementNS(NS, "text");
+      p.setAttribute("x", pos.x);
+      p.setAttribute("y", pos.y + 31);
+      p.setAttribute("text-anchor", "middle");
+      p.setAttribute("font-family", "Microsoft YaHei, sans-serif");
+      p.setAttribute("font-size", "9");
+      p.setAttribute("fill", spec.p[id] ? "#1b7f4b" : "#9b5b55");
+      p.textContent = `p:${spec.p[id] ? "真" : "假"}`;
+      group.appendChild(p);
+      svg.appendChild(group);
+    }
+    container.appendChild(svg);
+  }
+
+  document.querySelectorAll(".mini-model").forEach((container) => {
+    const key = container.dataset.case;
+    if (miniCases[key]) drawMiniModel(container, miniCases[key], key);
+  });
 
   // ------------------------------------------------------------------ init
 

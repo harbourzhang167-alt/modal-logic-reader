@@ -10,6 +10,7 @@
   const logicSelect = document.getElementById("logic");
   const statusBox = document.getElementById("status");
   const evalResults = document.getElementById("eval-results");
+  const traceBox = document.getElementById("trace");
   const propsList = document.getElementById("props");
   const logicStatus = document.getElementById("logic-status");
   const atomsBox = document.getElementById("atoms");
@@ -258,6 +259,7 @@
       setStatus("拖到目标世界，松开即可加边。", "info");
       renderGraph();
       renderAtoms();
+      renderTrace();
       return;
     }
 
@@ -266,6 +268,7 @@
     state.drag = { id, dx: p.x - pt.x, dy: p.y - pt.y };
     renderGraph();
     renderAtoms();
+    renderTrace();
   }
 
   function svgPoint(ev) {
@@ -460,7 +463,11 @@
 
   function renderEvalResults() {
     evalResults.innerHTML = "";
-    if (!state.lastEval) return;
+    if (!state.lastEval) {
+      traceBox.hidden = true;
+      traceBox.innerHTML = "";
+      return;
+    }
     for (const w of state.model.worlds) {
       const chip = document.createElement("span");
       const value = state.lastEval.results[w];
@@ -468,6 +475,68 @@
       chip.textContent = `w${w}: ${value ? "真" : "假"}`;
       evalResults.appendChild(chip);
     }
+    renderTrace();
+  }
+
+  function traceNode(node, depth) {
+    const wrap = document.createElement("div");
+    wrap.className = "trace-node" + (depth === 0 ? " root" : "");
+
+    const row = document.createElement("div");
+    row.className = "trace-row";
+
+    const formula = document.createElement("span");
+    formula.className = "trace-formula";
+    formula.textContent = node.formula;
+    row.appendChild(formula);
+
+    const world = document.createElement("span");
+    world.className = "trace-world";
+    world.textContent = `@ w${node.world}`;
+    row.appendChild(world);
+
+    const truth = document.createElement("span");
+    truth.className = "trace-truth " + (node.truth ? "true" : "false");
+    truth.textContent = node.truth ? "真" : "假";
+    row.appendChild(truth);
+    wrap.appendChild(row);
+
+    const reason = document.createElement("div");
+    reason.className = "trace-reason";
+    reason.textContent = node.reason;
+    wrap.appendChild(reason);
+
+    for (const child of node.children) {
+      wrap.appendChild(traceNode(child, depth + 1));
+    }
+    return wrap;
+  }
+
+  function renderTrace() {
+    if (!state.lastEval || !state.model.worlds.length) {
+      traceBox.hidden = true;
+      traceBox.innerHTML = "";
+      return;
+    }
+    const world =
+      state.selectedWorld !== null && state.model.worlds.includes(state.selectedWorld)
+        ? state.selectedWorld
+        : state.model.worlds[0];
+    let root;
+    try {
+      root = C.trace(state.model, world, state.lastEval.formula);
+    } catch (err) {
+      traceBox.hidden = true;
+      return;
+    }
+
+    traceBox.hidden = false;
+    traceBox.innerHTML = "";
+    const head = document.createElement("div");
+    head.className = "trace-head";
+    head.innerHTML = `逐子公式 trace <span>从 w${world} 出发</span>`;
+    traceBox.appendChild(head);
+    traceBox.appendChild(traceNode(root, 0));
   }
 
   function renderSummary() {

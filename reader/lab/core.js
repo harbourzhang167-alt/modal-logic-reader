@@ -238,6 +238,90 @@
     }
   }
 
+  function trace(model, world, f) {
+    const truth = evaluate(model, world, f);
+    const node = {
+      world,
+      formula: toUnicode(f),
+      type: f.t,
+      truth,
+      reason: "",
+      children: [],
+    };
+    const succ = successors(model, world);
+
+    switch (f.t) {
+      case "atom":
+        node.reason = `w${world} 的赋值${truth ? "包含" : "不包含"} ${f.name}`;
+        break;
+      case "not": {
+        const child = trace(model, world, f.a);
+        node.children = [child];
+        node.reason = `子公式 ${child.formula} 在 w${world} 为${child.truth ? "真" : "假"}，¬ 取反后为${truth ? "真" : "假"}`;
+        break;
+      }
+      case "and": {
+        const left = trace(model, world, f.a);
+        const right = trace(model, world, f.b);
+        node.children = [left, right];
+        node.reason = `左边为${left.truth ? "真" : "假"}，右边为${right.truth ? "真" : "假"}；合取要求两者都真`;
+        break;
+      }
+      case "or": {
+        const left = trace(model, world, f.a);
+        const right = trace(model, world, f.b);
+        node.children = [left, right];
+        node.reason = `左边为${left.truth ? "真" : "假"}，右边为${right.truth ? "真" : "假"}；析取允许至少一个为真`;
+        break;
+      }
+      case "imp": {
+        const left = trace(model, world, f.a);
+        const right = trace(model, world, f.b);
+        node.children = [left, right];
+        node.reason = truth
+          ? left.truth
+            ? `左边为真、右边也为真，所以前件真且后件真`
+            : `左边（前件）为假，蕴涵空真`
+          : `左边（前件）为真、右边（后件）为假，所以蕴涵为假`;
+        break;
+      }
+      case "iff": {
+        const left = trace(model, world, f.a);
+        const right = trace(model, world, f.b);
+        node.children = [left, right];
+        node.reason = `左边为${left.truth ? "真" : "假"}，右边为${right.truth ? "真" : "假"}；等价要求两者真值相同`;
+        break;
+      }
+      case "box": {
+        node.children = succ.map((v) => trace(model, v, f.a));
+        if (succ.length === 0) {
+          node.reason = "w" + world + " 没有可及世界；全称量化在空集上为真（空真）";
+        } else {
+          const bad = node.children.filter((child) => !child.truth);
+          node.reason = bad.length
+            ? `检查每个可及世界：${bad.map((child) => "w" + child.world).join("、")} 不满足子公式，所以 □ 为假`
+            : `检查每个可及世界：${succ.map((v) => "w" + v).join("、")} 都满足子公式，所以 □ 为真`;
+        }
+        break;
+      }
+      case "dia": {
+        node.children = succ.map((v) => trace(model, v, f.a));
+        const good = node.children.filter((child) => child.truth);
+        if (succ.length === 0) {
+          node.reason = "w" + world + " 没有可及世界；存在量化为假";
+        } else {
+          node.reason = good.length
+            ? `存在可及世界 ${good.map((child) => "w" + child.world).join("、")} 满足子公式，所以 ◇ 为真`
+            : `所有可及世界都不满足子公式（${succ.map((v) => "w" + v).join("、")}），所以 ◇ 为假`;
+        }
+        break;
+      }
+      default:
+        node.reason = "未知公式类型";
+    }
+    return node;
+  }
+
   function frameProperties(model) {
     const worlds = model.worlds;
     const es = edgeSet(model);
@@ -466,6 +550,7 @@
     toUnicode,
     atomsOf,
     evaluate,
+    trace,
     frameProperties,
     frameSatisfies,
     findCountermodel,
