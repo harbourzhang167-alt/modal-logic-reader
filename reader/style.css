@@ -146,7 +146,8 @@ button, input { font: inherit; }
   position: relative;
   display: grid;
   grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
-  max-width: 1480px;
+  width: calc(100% - 40px);
+  max-width: none;
   margin: 0 auto;
 }
 
@@ -1096,7 +1097,7 @@ button, input { font: inherit; }
 @media (max-width: 900px) {
   #menu-toggle { display: inline-grid; }
   .sidebar-resizer { display: none; }
-  .layout { display: block; }
+  .layout { display: block; width: 100%; margin: 0; }
   .sidebar {
     position: fixed;
     top: 64px;
