@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第二讲精读 · 从“当前为真”到“必然为真”</title>
+  <link rel="stylesheet" href="deep-dive.css">
+</head>
+<body>
+  <header class="dd-topbar">
+    <a class="dd-back" href="index.html">← 返回讲义</a>
+    <div class="dd-title">
+      <h1>第二讲精读 · Kripke 语义</h1>
+      <p>从“当前为真”到“必然为真”</p>
+    </div>
+    <nav class="dd-nav">
+      <a href="lab/index.html">Kripke 实验室</a>
+      <a href="content.html#sec-23">第二讲原文</a>
+      <a class="accent" href="index.html#sec-23">回到阅读器</a>
+    </nav>
+  </header>
+
+  <main class="dd-main">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">GUIDED READING · 第二讲</div>
+        <h1>“现在为真”<br>为什么不是“<em>必然为真</em>”？</h1>
+        <p class="lead">
+          如果门现在锁着，是否意味着它在所有可能情况下都锁着？
+          这一页不急着给定义，而是用一个最小模型，把
+          <span class="m">p</span>、<span class="m">◇p</span>、<span class="m">□p</span>
+          逐个算给你看；再改变模型，观察结论如何变化。
+        </p>
+        <div class="hero-tags">
+          <span class="tag">可能世界</span>
+          <span class="tag">可及关系</span>
+          <span class="tag">反模型</span>
+          <span class="tag">空可及关系</span>
+          <span class="tag">T 公理</span>
+        </div>
+      </div>
+      <aside class="hero-card">
+        <h2>本页要回答</h2>
+        <p>为什么方框对应“所有可及世界”，菱形对应“至少一个可及世界”？</p>
+        <span class="formula">□p&nbsp;→&nbsp;p</span>
+        <p>它在 K 中不成立；但加入自反性后，在 T 中成立。差别只在一根“自己指向自己”的箭头。</p>
+        <a class="mini-link" href="lab/index.html">亲手画一个模型 →</a>
+      </aside>
+    </section>
+
+    <section class="case" id="case">
+      <div class="case-head">
+        <div class="eyebrow">引导案例 · 五步走</div>
+        <h2>从自然语言问题，到一个可计算的模型</h2>
+        <p class="case-intro">
+          下面五个步骤对应“直觉 → 形式化 → 计算 → 反思 → 定义”。
+          先点开每一步，再在右侧模型上动手改一改。
+        </p>
+      </div>
+
+      <div class="five-step">
+        <div class="step-tabs" role="tablist" aria-label="五步讲解">
+          <button class="step-tab active" data-step="0" role="tab"><b>第 1 步</b>自然语言问题</button>
+          <button class="step-tab" data-step="1" role="tab"><b>第 2 步</b>最小模型</button>
+          <button class="step-tab" data-step="2" role="tab"><b>第 3 步</b>逐项求值</button>
+          <button class="step-tab" data-step="3" role="tab"><b>第 4 步</b>改变模型</button>
+          <button class="step-tab" data-step="4" role="tab"><b>第 5 步</b>回到定义</button>
+        </div>
+        <div class="step-panel" id="step-panel" role="tabpanel"></div>
+      </div>
+
+      <div class="model-grid">
+        <div>
+          <div class="model-stage">
+            <svg id="model-canvas" viewBox="0 0 460 280" role="img" aria-label="一个三世界 Kripke 模型"></svg>
+          </div>
+          <div class="model-controls">
+            <button class="btn" id="toggle-w2-p">切换 w2 的 p</button>
+            <button class="btn" id="toggle-edge">加/删 w0→w2</button>
+            <button class="btn gold" id="reset-model">重置模型</button>
+          </div>
+          <div class="model-note" id="model-note"></div>
+        </div>
+
+        <div>
+          <div class="verdicts">
+            <h3>在 w0 上的真值</h3>
+            <div class="verdict-row">
+              <span class="f">p</span><span class="v" id="v-p">假</span>
+              <span class="why" id="why-p">w0 本身不满足 p。</span>
+            </div>
+            <div class="verdict-row">
+              <span class="f">◇p</span><span class="v" id="v-dia">真</span>
+              <span class="why" id="why-dia">存在可及世界满足 p。</span>
+            </div>
+            <div class="verdict-row">
+              <span class="f">□p</span><span class="v" id="v-box">假</span>
+              <span class="why" id="why-box">并非所有可及世界都满足 p。</span>
+            </div>
+            <div class="verdict-row">
+              <span class="f">□p→p</span><span class="v" id="v-t">假</span>
+              <span class="why" id="why-t">前件真、后件假，蕴涵失败。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="case" id="counter">
+      <div class="case-head">
+        <div class="eyebrow">反例 · 一步一步</div>
+        <h2>空框架：为什么 <span class="m">□p</span> 会“空真”？</h2>
+        <p class="case-intro">
+          反例不是补充材料，而是理解定义的主要方法。
+          这个模型只有一个世界，没有任何可及边，且 p 在 w0 为假。
+        </p>
+      </div>
+      <div class="counter-grid">
+        <div class="counter-stage">
+          <svg id="counter-canvas" viewBox="0 0 460 280" role="img" aria-label="空可及关系的反模型"></svg>
+        </div>
+        <div class="counter-copy">
+          <div class="counter-progress" id="counter-progress" aria-hidden="true"></div>
+          <h3 id="counter-title">第 1 步：先看 p</h3>
+          <p id="counter-text"></p>
+          <div class="counter-controls">
+            <button class="btn primary" id="counter-next">下一步</button>
+            <button class="btn" id="counter-reset">重新开始</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="case" id="axioms">
+      <div class="case-head">
+        <div class="eyebrow">系统比较 · 不是背诵</div>
+        <h2>每个公理，为什么对应那个框架条件？</h2>
+        <p class="case-intro">
+          不要只记“T 对自反、4 对传递”。先问：如果关系少了一条性质，
+          哪个模型会让公理失败？
+        </p>
+      </div>
+      <div class="axiom-grid">
+        <article class="axiom-card">
+          <div class="axiom-top"><h3>T</h3><span class="cond">自反</span></div>
+          <div class="ax">□p → p</div>
+          <p>若 w 能看到自己，那么“所有可及世界都满足 p”就包含 w 自己，于是 p 在 w 成立。</p>
+        </article>
+        <article class="axiom-card">
+          <div class="axiom-top"><h3>4</h3><span class="cond">传递</span></div>
+          <div class="ax">□p → □□p</div>
+          <p>w 看到 v、v 看到 u 时，传递性给出 w 看到 u；于是第二层方框仍能覆盖 u。</p>
+        </article>
+        <article class="axiom-card">
+          <div class="axiom-top"><h3>5</h3><span class="cond">欧几里得</span></div>
+          <div class="ax">◇p → □◇p</div>
+          <p>若 w 看到 v 且 v 满足 p，那么从 w 出发的任意 u 也能看到 v，所以 u 也认为 ◇p。</p>
+        </article>
+        <article class="axiom-card">
+          <div class="axiom-top"><h3>B</h3><span class="cond">对称</span></div>
+          <div class="ax">p → □◇p</div>
+          <p>p 在 w 真；对任意 w 看到的 v，对称性让 v 回看 w，于是 v 认为 ◇p。</p>
+        </article>
+        <article class="axiom-card">
+          <div class="axiom-top"><h3>D</h3><span class="cond">串行</span></div>
+          <div class="ax">□p → ◇p</div>
+          <p>若每个世界至少有一个后继，□p 就不会因为“没有可及世界”而空真；它至少能找到一个 p。</p>
+        </article>
+        <article class="axiom-card">
+          <div class="axiom-top"><h3>K</h3><span class="cond">所有框架</span></div>
+          <div class="ax">□(p→q) → (□p→□q)</div>
+          <p>对所有可及世界，若 p→q 与 p 都成立，则 q 成立；方框只是把这条命题逻辑推理搬到每个后继。</p>
+        </article>
+      </div>
+      <div class="axiom-note">
+        <b>必然化规则（NEC）的边界：</b>从“假设 p”推出 p，不能因此得到 □p；
+        NEC 只能用于<strong>已经证明的定理</strong>。把依赖假设的公式套上 NEC，是模态证明中最常见的错误之一。
+      </div>
+    </section>
+
+    <section class="case" id="mistakes">
+      <div class="case-head">
+        <div class="eyebrow">常见错误 · 先诊断再纠正</div>
+        <h2>四个容易“看起来对”的误解</h2>
+      </div>
+      <div class="mistake-list">
+        <article class="mistake">
+          <h3>把“当前真”当成“必然真”</h3>
+          <p>p 在 w0 真，不代表所有可及世界都满足 p；方框要求的是“所有”，不是“这里”。</p>
+        </article>
+        <article class="mistake">
+          <h3>看到某个后继不满足 p，就判定 ◇p 假</h3>
+          <p>菱形只要求“至少一个”可及世界满足 p。一个失败的后继并不会自动否定可能性。</p>
+        </article>
+        <article class="mistake">
+          <h3>把空可及关系下的 □p 当成“没有意义”</h3>
+          <p>全称量化在空集上为真，所以 □p 空真；这恰恰是 T 在 K 中失败的原因。</p>
+        </article>
+        <article class="mistake">
+          <h3>对假设使用 NEC</h3>
+          <p>从假设 p 推出 p 是平凡的；但“p 是定理”与“p 在某个假设下成立”是两件事。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="case" id="quiz">
+      <div class="case-head">
+        <div class="eyebrow">理解检查 · 即时反馈</div>
+        <h2>三道题，检查你是不是真的会算</h2>
+        <p class="case-intro">选一个答案；错误选项会告诉你具体在哪一步想岔了。</p>
+      </div>
+      <div class="quiz-wrap" id="quiz"></div>
+    </section>
+
+    <section class="case" id="applications">
+      <div class="case-head">
+        <div class="eyebrow">从语义到应用</div>
+        <h2>同一个模型，可以解释三种问题</h2>
+      </div>
+      <div class="app-grid">
+        <article class="app-card">
+          <h3>知识：泥巴孩子</h3>
+          <p>世界 = 孩子是否脏；公开公告删除不符合事实的世界；“我不知道”本身也是信息。</p>
+          <p class="q">核心问题：别人不知道，和“我不知道别人是否知道”，差在哪？</p>
+          <a href="index.html#sec-76">读第六讲认知逻辑 →</a>
+        </article>
+        <article class="app-card">
+          <h3>程序验证：状态机</h3>
+          <p>世界 = 程序状态；边 = 允许的转换；□/◇ 描述“所有可能执行”与“存在一条执行”。</p>
+          <p class="q">核心问题：“始终安全”与“最终到达目标”是同一类要求吗？</p>
+          <a href="index.html#sec-77">读时间逻辑 →</a>
+        </article>
+        <article class="app-card">
+          <h3>道义：义务冲突</h3>
+          <p>世界 = 允许的事态；□ 读作“应当”；D 排除“应当但不可能/不允许”的冲突。</p>
+          <p class="q">核心问题：违反义务后，原来的义务还在吗？</p>
+          <a href="index.html#sec-78">读道义逻辑 →</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div>
+        <h2>别只看，自己画一个模型</h2>
+        <p>实验室支持拖动世界、加边、切换命题、求值、查框架和找反模型。</p>
+      </div>
+      <a href="lab/index.html">打开 Kripke 实验室 →</a>
+    </section>
+  </main>
+
+  <footer class="dd-footer">
+    第二讲精读 · 配合《模态逻辑六讲》使用。公式与模型均为教学简化；反模型搜索在实验室中有界（≤3 个世界），找不到反模型不等于公式普遍有效。
+  </footer>
+
+  <script src="deep-dive.js"></script>
+</body>
+</html>

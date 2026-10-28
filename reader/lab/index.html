@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kripke 实验室 · 模态逻辑六讲</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">□</span>
+      <div>
+        <h1>Kripke 实验室</h1>
+        <p>画模型 · 算公式 · 查框架 · 找反模型</p>
+      </div>
+    </div>
+    <div class="logic-picker">
+      <label for="logic">目标逻辑</label>
+      <select id="logic">
+        <option value="K">K</option>
+        <option value="T">T</option>
+        <option value="K4">K4</option>
+        <option value="S4">S4</option>
+        <option value="S5">S5</option>
+        <option value="D">D</option>
+        <option value="B">B</option>
+        <option value="K5">K5</option>
+        <option value="KD45">KD45</option>
+      </select>
+      <a class="lab-back" href="../index.html">← 返回讲义</a>
+      <a class="lab-back" href="../deep-dive.html">第二讲精读</a>
+    </div>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <section class="card">
+        <h2>公式</h2>
+        <input id="formula" type="text" value="[]p -> p" spellcheck="false"
+               placeholder="例如：[](p -> q) -> ([]p -> []q)">
+        <div class="row">
+          <button id="eval" class="primary">求值</button>
+          <button id="find">找反模型</button>
+        </div>
+        <div id="status" class="status info">公式在模型中的真值会显示在世界旁边。</div>
+        <div id="eval-results" class="eval-results"></div>
+        <div class="hint">
+          语法：<code>~</code> <code>&</code> <code>|</code> <code>-></code>
+          <code>&lt;-&gt;</code> <code>[]</code> <code>&lt;&gt;</code>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>框架检查</h2>
+        <ul id="props" class="props"></ul>
+        <div id="logic-status" class="logic-status"></div>
+      </section>
+
+      <section class="card">
+        <h2>世界 <span id="selected-world" class="badge">—</span></h2>
+        <div id="atoms" class="atoms"></div>
+        <div class="row">
+          <button id="toggle-loop">自反边</button>
+          <button id="delete-world" class="danger">删除世界</button>
+        </div>
+      </section>
+
+      <section class="card help">
+        <h2>操作</h2>
+        <p><b>选择/拖动</b>：点击世界或边；拖动世界可移动。</p>
+        <p><b>加世界</b>：点击空白处。</p>
+        <p><b>加边</b>：从一个世界拖到另一个世界。</p>
+        <p><b>删除</b>：选中后按 Delete；或点“删除世界”。</p>
+        <p>“找反模型”在 ≤3 个世界中穷举；没找到不等于公式普遍有效。</p>
+        <p>节点颜色反映当前公式的真值：<span class="chip true">真</span>
+          <span class="chip false">假</span>。</p>
+      </section>
+    </aside>
+
+    <section class="stage">
+      <div class="toolbar">
+        <div class="modes">
+          <button data-mode="select" class="mode active">选择/拖动</button>
+          <button data-mode="add-world" class="mode">加世界</button>
+          <button data-mode="add-edge" class="mode">加边</button>
+        </div>
+        <div id="mode-hint" class="mode-hint">点击世界选中；拖动移动</div>
+        <button id="clear" class="ghost">重置</button>
+      </div>
+      <div class="canvas-wrap">
+        <svg id="canvas" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet"
+             aria-label="Kripke 模型画布"></svg>
+        <div id="canvas-empty" class="canvas-empty" hidden>
+          还没有世界。点击“加世界”，再点画布。
+        </div>
+      </div>
+      <div class="statusbar">
+        <span id="model-summary"></span>
+      </div>
+    </section>
+  </main>
+
+  <script src="core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

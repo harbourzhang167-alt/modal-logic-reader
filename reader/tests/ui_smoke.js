@@ -136,6 +136,12 @@ async function waitReady(send) {
   }
   console.log("ok   standalone link:", standaloneHref);
 
+  const labHref = await evalJs(send, "document.getElementById('lab-link').getAttribute('href')");
+  if (!labHref.includes("lab/index.html")) throw new Error("lab link missing: " + labHref);
+  const deepHref = await evalJs(send, "document.querySelector('.side-link').getAttribute('href')");
+  if (!deepHref.includes("deep-dive.html")) throw new Error("deep-dive link missing: " + deepHref);
+  console.log("ok   lab + deep-dive links:", labHref, "|", deepHref);
+
   // select a paragraph containing 反模型
   const selected = await evalJs(
     send,

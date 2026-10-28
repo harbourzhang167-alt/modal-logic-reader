@@ -7,6 +7,8 @@
 - **正文全文搜索**：搜索所有章节，结果显示章节/片段，点击跳转并高亮
 - **右侧解释栏**：宽度可拖拽；支持“浮窗/停靠”和“钉住/取消钉住”
 - **正文独立页**：`reader/content.html` 按大标题分节，每章带小目录，可跳章、打印
+- **第二讲精读**：`reader/deep-dive.html`，五步引导、可改模型、空框架反例、即时测验
+- **Kripke 实验室**：`reader/lab/`，拖世界、加边、改赋值、求值、查框架、找反模型
 - 选中正文中的词/句，点“解释”
 - 默认 **本地 RAG**（离线，BM25 检索 + 抽取式回答）
 - 可选 **内置 API**（网页里填服务商/模型/Key，浏览器直接调用，不需要 Python）
@@ -15,7 +17,7 @@
 ![内置 API 设置](reader/screenshot-settings.png)
 
 > 在线版：<https://harbourzhang167-alt.github.io/modal-logic-reader/>  
-> 页面截图：[reader/screenshot.png](reader/screenshot.png)、[reader/screenshot-panel.png](reader/screenshot-panel.png)、[reader/screenshot-float.png](reader/screenshot-float.png)、[reader/screenshot-content.png](reader/screenshot-content.png)
+> 页面截图：[reader/screenshot.png](reader/screenshot.png)、[reader/screenshot-panel.png](reader/screenshot-panel.png)、[reader/screenshot-float.png](reader/screenshot-float.png)、[reader/screenshot-content.png](reader/screenshot-content.png)、[reader/screenshot-deep-dive.png](reader/screenshot-deep-dive.png)
 
 ## 直接使用
 
@@ -37,6 +39,24 @@ python reader/serve.py --port 8010
 - 每章开头有本章小目录；
 - 顶部“跳章”下拉、打印按钮、返回阅读器；
 - H2/H3 点击仍可跳到小节。
+
+### 第二讲精读
+
+打开 `reader/deep-dive.html`，或侧栏底部“第二讲精读”：
+
+- 五步引导：自然语言问题 → 最小模型 → 逐项求值 → 改变模型 → 回到定义；
+- 空可及关系反例分三步展示；
+- 三道即时反馈测验；
+- 可跳转到 Kripke 实验室亲手改模型。
+
+### Kripke 实验室
+
+点击右上角“实验室”，或打开 `reader/lab/index.html`：
+
+- 拖动世界、加边、切换命题赋值；
+- 输入公式求值，查看子公式；
+- 检查框架性质；
+- 在 ≤3 个世界中搜索反模型。
 
 ### 接 API
 
@@ -100,11 +120,13 @@ python reader/build_reader.py
 │   ├── content.js                 按 H1 分章的正文数据
 │   ├── content.html               正文独立页
 │   ├── content-page.css           正文独立页样式
+│   ├── deep-dive.html/css/js      第二讲精读（五步 + 反例 + 测验）
+│   ├── lab/                       Kripke 实验室（模型编辑器）
 │   ├── rag.js                     生成的 RAG 数据
 │   ├── rag/modal-logic-rag.jsonl  标准 RAG 文档
 │   ├── build_reader.py            DOCX → 分章 HTML + RAG + 独立页
 │   ├── serve.py                   静态服务 + API 代理
-│   └── tests/                     RAG、UI、API、独立页测试
+│   └── tests/                     RAG、UI、API、独立页、精读、实验室测试
 ├── course/模态逻辑六讲讲义.docx      内容源
 └── modal_lab.py                   讲义中引用的 Python 示例库
 ```
@@ -120,6 +142,12 @@ node reader/tests/ui_smoke.js
 
 # 正文独立页：9 章、每章小目录、锚点、跳章
 node reader/tests/ui_content_page.js
+
+# 第二讲精读：五步、模型切换、空框架 stepper、测验反馈
+node reader/tests/ui_deep_dive.js
+
+# Kripke 实验室：反模型、求值、框架性质、加世界
+node reader/tests/ui_lab_smoke.js
 ```
 
 API 模式可以用 mock OpenAI 服务验证，不需要真实 Key。

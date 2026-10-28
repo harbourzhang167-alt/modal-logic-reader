@@ -10,6 +10,8 @@
 - **正文全文搜索**：搜索所有章节的正文，结果显示章节/片段，点击跳转并高亮；
 - **右侧解释栏**：宽度可拖拽；可在“停靠 / 浮窗”之间切换；浮窗可拖动、可缩放；“钉住”后点外部不关闭；
 - **正文独立页**：`reader/content.html` 按大标题分节，带每章小目录、跳章下拉和打印样式；
+- **第二讲精读**：`reader/deep-dive.html`，五步引导、可改模型、空框架反例、三道即时反馈测验；
+- **Kripke 实验室**：`reader/lab/`，拖动世界、加边、切换赋值、求值、查框架、找反模型；
 - 选中正文中的词/句，弹出“解释”按钮；
 - 解释模式三选一：
   - **本地 RAG**：离线，BM25 检索 + 抽取式回答，不需要 API；
@@ -40,6 +42,25 @@ python reader/serve.py --port 8010
 - 每章开头有本章小目录；
 - 顶部“跳章”下拉、打印按钮、返回阅读器；
 - H2/H3 仍然可以点击跳到小节。
+
+### 第二讲精读
+
+打开 `reader/deep-dive.html`，或侧栏底部“第二讲精读”：
+
+- 五步引导：自然语言问题 → 最小模型 → 逐项求值 → 改变模型 → 回到定义；
+- 空可及关系反例分三步展示：p 假 → □p 空真 → □p→p 假；
+- 三道即时反馈测验，错误选项会指出具体误解；
+- 可跳转到 Kripke 实验室亲手改模型。
+
+### Kripke 实验室
+
+点击右上角“实验室”，或打开 `reader/lab/index.html`：
+
+- 点击世界选中/拖动，点击空白加世界，拖拽加边；
+- 切换各世界的原子命题真值；
+- 输入公式求值，查看每个子公式；
+- 检查框架性质；
+- 在 ≤3 个世界中搜索反模型。
 
 ### 使用内置 API（不需要 Python）
 
@@ -180,6 +201,12 @@ node reader/tests/ui_smoke.js
 
 # 正文独立页：9 章、每章小目录、锚点、跳章
 node reader/tests/ui_content_page.js
+
+# 第二讲精读：五步、模型切换、空框架 stepper、测验反馈
+node reader/tests/ui_deep_dive.js
+
+# Kripke 实验室：反模型、求值、框架性质、加世界
+node reader/tests/ui_lab_smoke.js
 ```
 
 API 模式可以用 mock 服务验证，不需要真实 Key。
@@ -232,6 +259,10 @@ reader/
 ├── content.js                 按 H1 分章的 HTML（生成）
 ├── content.html               正文独立页（生成）
 ├── content-page.css           正文独立页样式
+├── deep-dive.html             第二讲精读（五步 + 反例 + 测验）
+├── deep-dive.css              精读页样式
+├── deep-dive.js               精读页交互
+├── lab/                       Kripke 实验室（模型编辑器）
 ├── rag.js                     RAG 块（生成）
 ├── rag/
 │   ├── modal-logic-rag.jsonl  标准 RAG 文档
@@ -244,12 +275,15 @@ reader/
 ├── screenshot-float.png       解释浮窗
 ├── screenshot-settings.png    内置 API 设置
 ├── screenshot-content.png     正文独立页
+├── screenshot-deep-dive.png   第二讲精读
 └── tests/
     ├── test_rag.js
     ├── ui_smoke.js
     ├── ui_api_smoke.js
     ├── ui_direct_api_smoke.js
     ├── ui_content_page.js
+    ├── ui_deep_dive.js
+    ├── ui_lab_smoke.js
     └── mock_api.py
 ```
 
