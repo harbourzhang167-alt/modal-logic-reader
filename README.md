@@ -9,6 +9,8 @@
 - 可选 **内置 API**（网页里填服务商/模型/Key，浏览器直接调用，不需要 Python）
 - 可选 **代理**（Key 在服务端，适合线上/团队使用）
 
+![内置 API 设置](reader/screenshot-settings.png)
+
 > 在线版：<https://harbourzhang167-alt.github.io/modal-logic-reader/>  
 > 页面截图：[reader/screenshot-panel.png](reader/screenshot-panel.png)
 
