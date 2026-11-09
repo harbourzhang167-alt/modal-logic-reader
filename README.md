@@ -3,6 +3,7 @@
 把 6 讲模态逻辑教学 DOCX 变成一个可交互网页：
 
 - **正文按 H1 分章**：一次显示一章，章节选择器切换，小标题仍可跳转
+- **v1.5 内容深化**：六讲正文补齐导入、先修、定义拆解、完整例题、反例、错误诊断、应用边界与迁移检验；课程地图和练习索引可单独阅读
 - **左侧目录**：章/节/小节可勾选显示，宽度可拖拽，滚动高亮
 - **正文全文搜索**：搜索所有章节，结果显示章节/片段，点击跳转并高亮
 - **右侧解释栏**：宽度可拖拽；支持“浮窗/停靠”和“钉住/取消钉住”
@@ -19,6 +20,15 @@
 
 > 在线版：<https://harbourzhang167-alt.github.io/modal-logic-reader/>  
 > 页面截图：[reader/screenshot.png](reader/screenshot.png)、[reader/screenshot-panel.png](reader/screenshot-panel.png)、[reader/screenshot-float.png](reader/screenshot-float.png)、[reader/screenshot-content.png](reader/screenshot-content.png)、[reader/screenshot-deep-dive.png](reader/screenshot-deep-dive.png)、[reader/screenshot-formula-tree.png](reader/screenshot-formula-tree.png)、[reader/screenshot-map.png](reader/screenshot-map.png)、[reader/screenshot-lab-trace.png](reader/screenshot-lab-trace.png)
+
+### 课程内容（v1.5 P0）
+
+六讲正文已按 `TUTORIAL_WORKFLOW_PROMPT_v1.5.md` 做内容深化，结构仍是 9 章 / 96 标题 / 127 个 RAG 块，`sec-N` 深链不变：
+
+- [课程地图](course/curriculum-map.md)：对象、先修、四个核心问题、依赖图、三条学习路径、范围边界。
+- [练习索引](course/exercise-index.md)：42 道题逐题映射目标、知识点、难度与答案依据。
+- [讲义 DOCX](course/模态逻辑六讲讲义.docx)：六讲正文的下载版。
+- 六讲每讲都有“本讲导入 → 可观察目标 → 先修 → 定义拆解 → 完整例题 → 反例/对照 → 常见错误 → 应用边界 → 迁移检验 → 要点”的闭环。
 
 ## 直接使用
 
@@ -103,8 +113,8 @@ API Key 只保存在服务端。GitHub Pages 是静态站，线上使用代理�
 
 | 文件 | 说明 |
 |---|---|
-| `reader/rag/modal-logic-rag.jsonl` | 标准 RAG 文档，100 个块，每行一个 JSON |
-| `reader/rag/stats.json` | 96 个标题、100 个块、约 6.5 万字符 |
+| `reader/rag/modal-logic-rag.jsonl` | 标准 RAG 文档，127 个块，每行一个 JSON |
+| `reader/rag/stats.json` | 96 个标题、127 个块、约 10.9 万字符 |
 | `reader/rag.js` | 浏览器加载的同一份 RAG 数据 |
 | `reader/content.js` | DOCX 转换后的 HTML 与统计信息 |
 
@@ -141,13 +151,23 @@ python reader/build_reader.py
 │   ├── build_reader.py            DOCX → 分章 HTML + RAG + 独立页
 │   ├── serve.py                   静态服务 + API 代理
 │   └── tests/                     RAG、UI、API、独立页、精读、实验室、地图测试
-├── course/模态逻辑六讲讲义.docx      内容源
+├── course/
+│   ├── README.md                  课程说明
+│   ├── curriculum-map.md          课程地图
+│   ├── exercise-index.md          练习索引
+│   ├── lectures/                  六讲讲义 Markdown
+│   ├── exercises.md               练习题
+│   ├── solutions.md               参考答案
+│   └── 模态逻辑六讲讲义.docx      讲义下载版（内容源）
 └── modal_lab.py                   讲义中引用的 Python 示例库
 ```
 
 ## 测试
 
 ```powershell
+# v1.5 内容闭环、课程地图、练习索引、生成统计
+node reader/tests/test_content_v15.js
+
 # RAG 检索、章节拆分、抽取式回答、anchor 一致性
 node reader/tests/test_rag.js
 

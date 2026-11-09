@@ -132,7 +132,7 @@ course/模态逻辑六讲讲义.docx
 | `reader/rag/stats.json` | 块数、标题数、章节数、字符数 |
 | `reader/rag/README.md` | RAG 文档说明 |
 
-当前构建结果：9 章、96 个标题、100 个 RAG 块、约 6.5 万字符。
+当前构建结果：9 章、96 个标题、127 个 RAG 块、约 10.9 万字符。
 
 RAG 块字段：
 
@@ -154,7 +154,7 @@ RAG 块字段：
 
 ### 本地 RAG（默认）
 
-1. `build_reader.py` 按标题切分 DOCX，生成 100 个 chunk；
+1. `build_reader.py` 按标题切分 DOCX，生成 127 个 chunk；
 2. 浏览器加载 `rag.js`，在本地建立 BM25 索引（中文 unigram + bigram，英文/公式 token）；
 3. 选中文本后，用“选中内容 + 所在章节”检索 top 5；
 4. `answer()` 从命中段落中挑 3 句最相关的句子，附上来源编号；
@@ -206,6 +206,9 @@ RAG 块字段：
 ## 测试
 
 ```powershell
+# v1.5 内容闭环、课程地图、练习索引、生成统计
+node reader/tests/test_content_v15.js
+
 # RAG 检索、章节拆分、抽取式回答
 node reader/tests/test_rag.js
 
@@ -298,6 +301,7 @@ reader/
 ├── screenshot-map.png         知识地图
 ├── screenshot-lab-trace.png   实验室逐子公式 trace
 └── tests/
+    ├── test_content_v15.js
     ├── test_rag.js
     ├── ui_smoke.js
     ├── ui_api_smoke.js
@@ -312,7 +316,7 @@ reader/
 ## 边界
 
 - 本地 RAG 是检索 + 抽取，不是生成式问答；它不会“推理”出讲义里没有的结论。
-- 第二讲精读是教学切片，不等于六讲全部内容都已完成同等深度改写。
+- 六讲正文已按 v1.5 做 P0 深化（导入、定义拆解、完整例题、反例/错误诊断、应用边界）；目前只有第二讲有独立精读页，其余讲次以正文强化为主，不代表每讲都配有同等交互实验。
 - 实验室的反模型搜索在 ≤3 个世界中穷举；“没找到”不等于公式普遍有效。
 - 内置 API 的质量取决于模型和 Prompt，且受服务商 CORS 策略影响；浏览器直连失败时请改用代理。
 - 没有账号、没有云端存储；所有模型选择/端点保存在浏览器 localStorage，API Key 在 sessionStorage 或服务端环境变量。
